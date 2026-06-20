@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solicitud de Herramientas</title>
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+  <div class="contenedor">
+
+    <header class="encabezado">
+      <h1>Formulario de Solicitud de Herramientas</h1>
+      <div class="linea-verde"></div>
+    </header>
+
+    <!-- PASO 1: FORMULARIO -->
+    <form id="form-solicitud" class="tarjeta">
+
+      <div class="campo">
+        <label for="nombre">Nombre(s)</label>
+        <input type="text" id="nombre" required>
+      </div>
+
+      <div class="campo">
+        <label for="apellido">Apellido(s)</label>
+        <input type="text" id="apellido" required>
+      </div>
+
+      <div class="campo">
+        <label for="matricula">Matrícula</label>
+        <input type="text" id="matricula" placeholder="0000-0000" required>
+        <small>Formato: 0000-0000 (ej. 2024-1234)</small>
+      </div>
+
+      <div class="campo">
+        <label for="ciclo">Ciclo</label>
+        <select id="ciclo" required>
+          <option value="">Elige el ciclo</option>
+          <option value="2-2026">2-2026</option>
+          <option value="1-2026">1-2026</option>
+          <option value="2-2025">2-2025</option>
+          <option value="1-2025">1-2025</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="telefono">Número de teléfono</label>
+        <input type="tel" id="telefono" placeholder="809-000-0000" required>
+      </div>
+
+      <div class="campo">
+        <label for="profesor">Profesor</label>
+        <select id="profesor" required>
+          <option value="">Elige un profesor</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="laboratorio">Laboratorio / Taller</label>
+        <select id="laboratorio" required>
+          <option value="">Elige un laboratorio/taller</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label>Herramientas</label>
+        <div id="grid-herramientas" class="grid-herramientas">
+          <!-- Las tarjetas de herramientas se generan dinámicamente con JS -->
+        </div>
+      </div>
+
+      <button type="submit" id="btn-enviar" class="btn-enviar">Enviar Solicitud</button>
+
+    </form>
+
+    <!-- PASO 2: MENSAJE EPP -->
+    <div id="mensaje-epp" class="tarjeta mensaje mensaje-epp oculto">
+      <h2>⚠️ Recordatorio de Seguridad</h2>
+      <p>Antes de realizar cualquier práctica, asegúrate de utilizar correctamente tus equipos de protección personal (EPP):</p>
+      <ul>
+        <li>✓ Guantes</li>
+        <li>✓ Lentes de seguridad</li>
+        <li>✓ Casco</li>
+      </ul>
+      <p class="resaltado">Tu seguridad es lo más importante.</p>
+      <button id="btn-continuar" class="btn-enviar">Continuar</button>
+    </div>
+
+    <!-- PASO 3: MENSAJE DE DESPEDIDA -->
+    <div id="mensaje-final" class="tarjeta mensaje mensaje-final oculto">
+      <h2>✅ Solicitud enviada correctamente</h2>
+      <p id="texto-numero-solicitud" class="numero-solicitud"></p>
+      <p id="texto-despedida"></p>
+      <p>Te deseamos una excelente práctica y un buen resto del día.</p>
+      <button id="btn-nueva-solicitud" class="btn-enviar">Nueva solicitud</button>
+    </div>
+
+  </div>
+
+  <!-- Firebase SDK (modular, vía CDN) -->
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/inventario.js"></script>
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
