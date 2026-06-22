@@ -602,6 +602,54 @@
 
   #toast.verde { background: var(--verde); color: #000; }
   #toast.rojo { background: var(--rojo); color: #fff; }
+
+  /* ── FILAS ENTREGA/RETORNO ── */
+  .fila-herramienta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 13px;
+  }
+  .fila-herramienta:last-child { border-bottom: none; }
+  .fila-herramienta input[type="checkbox"] {
+    width: 17px; height: 17px; accent-color: var(--verde); cursor: pointer; flex-shrink: 0;
+  }
+  .fila-herramienta .h-nombre { flex: 1; }
+  .fila-herramienta .h-cant { color: var(--verde); font-weight: 700; min-width: 28px; }
+
+  .select-estado {
+    padding: 5px 8px;
+    background: var(--card2);
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    color: var(--texto);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .select-estado:focus { outline: none; border-color: var(--verde); }
+
+  .fila-adicional {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .fila-adicional input {
+    flex: 1;
+    padding: 7px 10px;
+    background: var(--bg);
+    border: 1px solid var(--borde);
+    border-radius: 7px;
+    color: var(--texto);
+    font-size: 13px;
+  }
+  .fila-adicional input:focus { outline: none; border-color: var(--verde); }
+  .fila-adicional .cant-adicional { width: 60px; }
+  .btn-quitar-fila {
+    background: none; border: none; color: var(--rojo); font-size: 16px; cursor: pointer; padding: 0 4px;
+  }
 </style>
 </head>
 <body>
@@ -826,6 +874,54 @@
     </div>
     <div id="modal-contenido"></div>
     <div class="modal-acciones" id="modal-acciones"></div>
+  </div>
+</div>
+
+<!-- ── MODAL ENTREGA ── -->
+<div class="modal-overlay" id="modal-entrega">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-titulo">
+      ✓ Entregar Herramientas
+      <button class="modal-cerrar" onclick="cerrarModalEntrega()">✕</button>
+    </div>
+    <div id="alerta-incidencia" style="display:none;background:rgba(239,68,68,0.12);border:1px solid var(--rojo);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--rojo)"></div>
+    <div id="info-entrega" style="margin-bottom:14px;font-size:13px;color:var(--texto-dim)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;font-weight:700;color:var(--texto-dim);text-transform:uppercase">Herramientas a entregar</span>
+      <button class="btn btn-outline" id="btn-toggle-entrega" onclick="toggleMarcarTodasEntrega()">Marcar todas</button>
+    </div>
+    <div id="lista-entrega" style="background:var(--bg);border-radius:8px;padding:8px;margin-bottom:14px;max-height:260px;overflow-y:auto"></div>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:var(--texto-dim);text-transform:uppercase">Herramientas adicionales</span>
+        <button class="btn btn-outline" onclick="agregarFilaAdicional()">+ Agregar</button>
+      </div>
+      <div id="lista-adicionales"></div>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalEntrega()">Cancelar</button>
+      <button class="btn btn-verde" onclick="confirmarEntrega()">✓ Confirmar Entrega</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL RETORNO ── -->
+<div class="modal-overlay" id="modal-retorno">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-titulo">
+      ↩ Registrar Retorno
+      <button class="modal-cerrar" onclick="cerrarModalRetorno()">✕</button>
+    </div>
+    <div id="info-retorno" style="margin-bottom:14px;font-size:13px;color:var(--texto-dim)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;font-weight:700;color:var(--texto-dim);text-transform:uppercase">Estado de cada herramienta</span>
+      <button class="btn btn-outline" id="btn-toggle-retorno" onclick="toggleMarcarTodasRetorno()">Marcar todas ✅</button>
+    </div>
+    <div id="lista-retorno" style="background:var(--bg);border-radius:8px;padding:8px;margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalRetorno()">Cancelar</button>
+      <button class="btn btn-azul" onclick="confirmarRetorno()">↩ Confirmar Retorno</button>
+    </div>
   </div>
 </div>
 
@@ -1196,34 +1292,220 @@ document.getElementById("modal-solicitud").addEventListener("click", e => {
 });
 
 // ── ACCIONES ──
+let solicitudActivaId = null;
+
+// ─── MODAL ENTREGA ───
 window.entregar = async function(id) {
+  solicitudActivaId = id;
+  const s = todasSolicitudes.find(x => x.id === id);
+  if (!s) return;
+
+  // Verificar historial de incidencias
+  const alertaEl = document.getElementById("alerta-incidencia");
   try {
-    await updateDoc(doc(db, "solicitudes", id), {
+    const snapHist = await getDocs(query(
+      collection(db, "incidencias"),
+      where("matricula", "==", s.matricula)
+    ));
+    if (!snapHist.empty) {
+      const items = snapHist.docs.map(d => d.data());
+      alertaEl.style.display = "block";
+      alertaEl.innerHTML = `⚠️ <strong>Este estudiante tiene ${items.length} incidencia(s) previa(s):</strong><br>` +
+        items.map(i => `• ${i.herramienta} — <em>${i.tipo}</em> (${i.fecha || "sin fecha"})`).join("<br>");
+    } else {
+      alertaEl.style.display = "none";
+    }
+  } catch(e) { alertaEl.style.display = "none"; }
+
+  document.getElementById("info-entrega").innerHTML =
+    `<strong>${s.nombre} ${s.apellido}</strong> · ${s.matricula} · ${s.laboratorio || ""}`;
+
+  // Renderizar lista de herramientas con checkboxes
+  const lista = document.getElementById("lista-entrega");
+  lista.innerHTML = (s.herramientas || []).map((h, i) => `
+    <div class="fila-herramienta">
+      <input type="checkbox" id="chk-e-${i}" data-idx="${i}" checked>
+      <span class="h-nombre">${h.nombre}</span>
+      <span class="h-cant">x${h.cantidad}</span>
+    </div>
+  `).join("") || "<div style='padding:12px;color:var(--texto-dim)'>Sin herramientas</div>";
+
+  document.getElementById("lista-adicionales").innerHTML = "";
+  document.getElementById("btn-toggle-entrega").textContent = "Desmarcar todas";
+
+  document.getElementById("modal-entrega").classList.add("abierto");
+};
+
+window.toggleMarcarTodasEntrega = function() {
+  const checks = document.querySelectorAll("#lista-entrega input[type='checkbox']");
+  const todasMarcadas = [...checks].every(c => c.checked);
+  checks.forEach(c => c.checked = !todasMarcadas);
+  document.getElementById("btn-toggle-entrega").textContent = todasMarcadas ? "Marcar todas" : "Desmarcar todas";
+};
+
+window.agregarFilaAdicional = function() {
+  const div = document.createElement("div");
+  div.className = "fila-adicional";
+  div.innerHTML = `
+    <input type="text" placeholder="Nombre de la herramienta" class="nombre-adicional">
+    <input type="number" class="cant-adicional" value="1" min="1" placeholder="Cant.">
+    <button class="btn-quitar-fila" onclick="this.parentElement.remove()">✕</button>
+  `;
+  document.getElementById("lista-adicionales").appendChild(div);
+};
+
+window.cerrarModalEntrega = function() {
+  document.getElementById("modal-entrega").classList.remove("abierto");
+  solicitudActivaId = null;
+};
+
+window.confirmarEntrega = async function() {
+  if (!solicitudActivaId) return;
+  const s = todasSolicitudes.find(x => x.id === solicitudActivaId);
+  if (!s) return;
+
+  // Herramientas marcadas
+  const checks = document.querySelectorAll("#lista-entrega input[type='checkbox']");
+  const herramientasEntregadas = [];
+  checks.forEach((chk, i) => {
+    if (chk.checked && s.herramientas[i]) {
+      herramientasEntregadas.push({ ...s.herramientas[i], estadoEntrega: "entregada" });
+    }
+  });
+
+  // Adicionales
+  document.querySelectorAll("#lista-adicionales .fila-adicional").forEach(fila => {
+    const nombre = fila.querySelector(".nombre-adicional").value.trim();
+    const cantidad = parseInt(fila.querySelector(".cant-adicional").value) || 1;
+    if (nombre) herramientasEntregadas.push({ nombre, cantidad, adicional: true, estadoEntrega: "entregada" });
+  });
+
+  try {
+    await updateDoc(doc(db, "solicitudes", solicitudActivaId), {
       estado: "entregada",
-      entregadoEn: serverTimestamp()
+      entregadoEn: serverTimestamp(),
+      herramientasEntregadas
     });
-    const s = todasSolicitudes.find(x => x.id === id);
-    if (s) s.estado = "entregada";
+    const sx = todasSolicitudes.find(x => x.id === solicitudActivaId);
+    if (sx) { sx.estado = "entregada"; sx.herramientasEntregadas = herramientasEntregadas; }
     actualizarContadores();
     renderTabla();
     cargarDashboard();
+    cerrarModalEntrega();
     mostrarToast("✓ Herramientas entregadas correctamente");
   } catch(e) { mostrarToast("Error al entregar", "rojo"); }
 };
 
-window.retornar = async function(id) {
+// ─── MODAL RETORNO ───
+window.retornar = function(id) {
+  solicitudActivaId = id;
+  const s = todasSolicitudes.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById("info-retorno").innerHTML =
+    `<strong>${s.nombre} ${s.apellido}</strong> · ${s.matricula} · ${s.laboratorio || ""}`;
+
+  const herramientas = s.herramientasEntregadas || s.herramientas || [];
+  const lista = document.getElementById("lista-retorno");
+  lista.innerHTML = herramientas.map((h, i) => `
+    <div class="fila-herramienta">
+      <input type="checkbox" id="chk-r-${i}" data-idx="${i}" checked>
+      <span class="h-nombre">${h.nombre}${h.adicional ? ' <span style="font-size:10px;color:var(--azul)">(adicional)</span>' : ""}</span>
+      <span class="h-cant">x${h.cantidad}</span>
+      <select class="select-estado" id="estado-r-${i}">
+        <option value="retornada">✅ Retornada</option>
+        <option value="dañada">🔴 Dañada</option>
+        <option value="no_retornada">⚠️ No retornada</option>
+        <option value="perdida">❌ Perdida</option>
+      </select>
+    </div>
+  `).join("") || "<div style='padding:12px;color:var(--texto-dim)'>Sin herramientas</div>";
+
+  // Al desmarcar checkbox, el select cambia a "no_retornada"
+  herramientas.forEach((_, i) => {
+    const chk = document.getElementById(`chk-r-${i}`);
+    const sel = document.getElementById(`estado-r-${i}`);
+    if (chk && sel) {
+      chk.addEventListener("change", () => {
+        if (!chk.checked) sel.value = "no_retornada";
+        else if (sel.value === "no_retornada") sel.value = "retornada";
+      });
+    }
+  });
+
+  document.getElementById("btn-toggle-retorno").textContent = "Desmarcar todas ✅";
+  document.getElementById("modal-retorno").classList.add("abierto");
+};
+
+window.toggleMarcarTodasRetorno = function() {
+  const checks = document.querySelectorAll("#lista-retorno input[type='checkbox']");
+  const todasMarcadas = [...checks].every(c => c.checked);
+  checks.forEach((chk, i) => {
+    chk.checked = !todasMarcadas;
+    const sel = document.getElementById(`estado-r-${i}`);
+    if (sel && !chk.checked) sel.value = "no_retornada";
+    else if (sel && sel.value === "no_retornada") sel.value = "retornada";
+  });
+  document.getElementById("btn-toggle-retorno").textContent = todasMarcadas ? "Marcar todas ✅" : "Desmarcar todas ✅";
+};
+
+window.cerrarModalRetorno = function() {
+  document.getElementById("modal-retorno").classList.remove("abierto");
+  solicitudActivaId = null;
+};
+
+window.confirmarRetorno = async function() {
+  if (!solicitudActivaId) return;
+  const s = todasSolicitudes.find(x => x.id === solicitudActivaId);
+  if (!s) return;
+
+  const herramientas = s.herramientasEntregadas || s.herramientas || [];
+  const resultado = [];
+  const incidencias = [];
+
+  herramientas.forEach((h, i) => {
+    const chk = document.getElementById(`chk-r-${i}`);
+    const sel = document.getElementById(`estado-r-${i}`);
+    const estado = sel ? sel.value : (chk?.checked ? "retornada" : "no_retornada");
+    resultado.push({ ...h, estadoRetorno: estado });
+    if (estado !== "retornada") {
+      incidencias.push({ herramienta: h.nombre, tipo: estado });
+    }
+  });
+
   try {
-    await updateDoc(doc(db, "solicitudes", id), {
+    await updateDoc(doc(db, "solicitudes", solicitudActivaId), {
       estado: "retornada",
-      retornadoEn: serverTimestamp()
+      retornadoEn: serverTimestamp(),
+      herramientasRetorno: resultado
     });
-    const s = todasSolicitudes.find(x => x.id === id);
-    if (s) s.estado = "retornada";
+
+    // Registrar incidencias si las hay
+    for (const inc of incidencias) {
+      await addDoc(collection(db, "incidencias"), {
+        matricula: s.matricula,
+        nombre: `${s.nombre} ${s.apellido}`,
+        herramienta: inc.herramienta,
+        tipo: inc.tipo,
+        solicitudId: solicitudActivaId,
+        fecha: new Date().toLocaleDateString("es-DO"),
+        creadoEn: serverTimestamp()
+      });
+    }
+
+    const sx = todasSolicitudes.find(x => x.id === solicitudActivaId);
+    if (sx) sx.estado = "retornada";
     actualizarContadores();
     renderTabla();
     cargarDashboard();
-    mostrarToast("↩ Herramientas retornadas al inventario");
-  } catch(e) { mostrarToast("Error al retornar", "rojo"); }
+    cerrarModalRetorno();
+
+    if (incidencias.length > 0) {
+      mostrarToast(`↩ Retorno registrado · ${incidencias.length} incidencia(s) registrada(s)`, "rojo");
+    } else {
+      mostrarToast("↩ Todas las herramientas retornadas correctamente");
+    }
+  } catch(e) { mostrarToast("Error al registrar retorno", "rojo"); }
 };
 
 window.cancelar = async function(id) {
