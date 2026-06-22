@@ -1841,6 +1841,7 @@ window.ppAgregarFila = function() {
   const contenedor = document.getElementById("pp-lista-herramientas");
   const idx = contenedor.children.length;
   const div = document.createElement("div");
+  div.dataset.filaHerramienta = "1";
   div.style.cssText = "display:flex;gap:8px;align-items:center;margin-bottom:8px;position:relative";
   div.innerHTML = `
     <div style="flex:1;position:relative">
@@ -1881,7 +1882,7 @@ window.confirmarNuevoPrestamoProf = async function() {
   if (!profesor)    { mostrarToast("Selecciona un profesor", "rojo"); return; }
   if (!laboratorio) { mostrarToast("Selecciona un laboratorio", "rojo"); return; }
 
-  const filas = document.getElementById("pp-lista-herramientas").querySelectorAll("div[style]");
+  const filas = document.getElementById("pp-lista-herramientas").querySelectorAll("div[data-fila-herramienta]");
   const herramientas = [];
   for (const fila of filas) {
     const inputs = fila.querySelectorAll("input");
