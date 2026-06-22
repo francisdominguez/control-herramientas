@@ -20,7 +20,49 @@
     --texto-dim: #94a3b8;
     --borde: #2e3347;
     --hover: #2a2f45;
+    --topbar-bg: #1a1d27;
+    --topbar-texto: #f1f5f9;
+    --topbar-sub: #94a3b8;
+    --avatar-bg: #22c55e;
+    --avatar-texto: #000;
   }
+
+  body.tema-claro {
+    --bg: #f0f2f0;
+    --sidebar: #ffffff;
+    --card: #ffffff;
+    --card2: #f1f8f1;
+    --verde: #2e7d32;
+    --verde-dim: #1b5e20;
+    --amarillo: #f59e0b;
+    --rojo: #d32f2f;
+    --azul: #1976d2;
+    --morado: #7b1fa2;
+    --texto: #2c2c2c;
+    --texto-dim: #666666;
+    --borde: #d1d8d2;
+    --hover: #f1f8f1;
+    --topbar-bg: #2e7d32;
+    --topbar-texto: #ffffff;
+    --topbar-sub: rgba(255,255,255,0.75);
+    --avatar-bg: #ffffff;
+    --avatar-texto: #2e7d32;
+  }
+
+  .btn-tema {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 12px;
+  }
+  .btn-tema:hover { background: rgba(255,255,255,0.25); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -132,7 +174,7 @@
   /* ── TOPBAR ── */
   .topbar {
     grid-column: 1 / -1;
-    background: var(--sidebar);
+    background: var(--topbar-bg);
     border-bottom: 1px solid var(--borde);
     display: flex;
     align-items: center;
@@ -140,39 +182,19 @@
     gap: 12px;
   }
 
-  .topbar-logo { font-size: 22px; }
-
-  .topbar-titulo {
-    font-weight: 700;
-    font-size: 15px;
-  }
-
-  .topbar-sub {
-    font-size: 12px;
-    color: var(--texto-dim);
-  }
-
-  .topbar-spacer { flex: 1; }
-
-  .topbar-admin {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-  }
-
+  .topbar-titulo { font-weight: 700; font-size: 15px; color: var(--topbar-texto); }
+  .topbar-sub { font-size: 12px; color: var(--topbar-sub); }
   .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--verde);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 13px;
-    color: #000;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--avatar-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+    color: var(--avatar-texto);
   }
+
+  .topbar-logo { font-size: 22px; }
+  .topbar-spacer { flex: 1; }
+  .topbar-admin { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--topbar-texto); }
 
   /* ── SIDEBAR ── */
   .sidebar {
@@ -686,6 +708,7 @@
         <div class="topbar-sub">Taller Mecánica Industrial</div>
       </div>
       <div class="topbar-spacer"></div>
+      <button class="btn-tema" id="btn-tema" onclick="toggleTema()">🌙 Oscuro</button>
       <div class="topbar-admin">
         <div class="avatar" id="admin-avatar">A</div>
         <div>
@@ -1554,6 +1577,25 @@ window.anular = async function(id) {
     mostrarToast("Solicitud anulada");
   } catch(e) { mostrarToast("Error al anular", "rojo"); }
 };
+// ── TEMA ──
+function aplicarTema(tema) {
+  if (tema === 'claro') {
+    document.body.classList.add('tema-claro');
+    document.getElementById('btn-tema').textContent = '🌙 Oscuro';
+  } else {
+    document.body.classList.remove('tema-claro');
+    document.getElementById('btn-tema').textContent = '☀️ Claro';
+  }
+  localStorage.setItem('tema-admin', tema);
+}
+
+window.toggleTema = function() {
+  const actual = localStorage.getItem('tema-admin') || 'oscuro';
+  aplicarTema(actual === 'oscuro' ? 'claro' : 'oscuro');
+};
+
+// Aplicar tema guardado al cargar
+aplicarTema(localStorage.getItem('tema-admin') || 'oscuro');
 </script>
 </body>
 </html>
