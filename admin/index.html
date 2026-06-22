@@ -899,7 +899,7 @@
       <div id="lista-adicionales"></div>
     </div>
     <div class="modal-acciones">
-      <button class="btn btn-outline" onclick="cerrarModalEntrega()">Cancelar</button>
+      <button class="btn btn-outline" onclick="cerrarModalEntrega()">Cerrar</button>
       <button class="btn btn-verde" onclick="confirmarEntrega()">✓ Confirmar Entrega</button>
     </div>
   </div>
@@ -919,7 +919,7 @@
     </div>
     <div id="lista-retorno" style="background:var(--bg);border-radius:8px;padding:8px;margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
     <div class="modal-acciones">
-      <button class="btn btn-outline" onclick="cerrarModalRetorno()">Cancelar</button>
+      <button class="btn btn-outline" onclick="cerrarModalRetorno()">Cerrar</button>
       <button class="btn btn-azul" onclick="confirmarRetorno()">↩ Confirmar Retorno</button>
     </div>
   </div>
@@ -1113,11 +1113,13 @@ const porPagina = 10;
 
 async function cargarSolicitudes() {
   try {
-    const snap = await getDocs(query(collection(db, "solicitudes"), orderBy("creadoEn", "desc")));
-    todasSolicitudes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    actualizarContadores();
-    cargarSelectores();
-    renderTabla();
+    onSnapshot(query(collection(db, "solicitudes"), orderBy("creadoEn", "desc")), (snap) => {
+      todasSolicitudes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      actualizarContadores();
+      cargarSelectores();
+      renderTabla();
+      cargarDashboard();
+    });
   } catch(e) { console.error(e); }
 }
 
@@ -1268,8 +1270,8 @@ window.abrirModal = function(id) {
     b.onclick = () => { cerrarModal(); entregar(id); };
     acciones.appendChild(b);
     const bc = document.createElement("button");
-    bc.className = "btn btn-rojo"; bc.textContent = "✕ Cancelar";
-    bc.onclick = () => { cerrarModal(); cancelar(id); };
+    bc.className = "btn btn-rojo"; bc.textContent = "⊘ Anular";
+    bc.onclick = () => { cerrarModal(); anular(id); };
     acciones.appendChild(bc);
   }
   if (s.estado === "entregada") {
@@ -1347,11 +1349,37 @@ window.agregarFilaAdicional = function() {
   const div = document.createElement("div");
   div.className = "fila-adicional";
   div.innerHTML = `
-    <input type="text" placeholder="Nombre de la herramienta" class="nombre-adicional">
-    <input type="number" class="cant-adicional" value="1" min="1" placeholder="Cant.">
+    <div style="position:relative;flex:1">
+      <input type="text" placeholder="Buscar herramienta..." class="nombre-adicional" autocomplete="off">
+      <div class="dropdown-herramientas" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card2);border:1px solid var(--borde);border-radius:7px;z-index:50;max-height:180px;overflow-y:auto"></div>
+    </div>
+    <input type="number" class="cant-adicional" value="1" min="1" placeholder="Cant." style="width:60px">
     <button class="btn-quitar-fila" onclick="this.parentElement.remove()">✕</button>
   `;
   document.getElementById("lista-adicionales").appendChild(div);
+
+  const input = div.querySelector(".nombre-adicional");
+  const dropdown = div.querySelector(".dropdown-herramientas");
+
+  input.addEventListener("input", () => {
+    const q = input.value.toLowerCase();
+    const matches = HERRAMIENTAS_LISTA.filter(h => h.nombre.toLowerCase().includes(q)).slice(0, 8);
+    if (!q || matches.length === 0) { dropdown.style.display = "none"; return; }
+    dropdown.innerHTML = matches.map(h =>
+      `<div class="dropdown-item" data-nombre="${h.nombre}" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--borde)">${h.nombre}</div>`
+    ).join("");
+    dropdown.style.display = "block";
+    dropdown.querySelectorAll(".dropdown-item").forEach(item => {
+      item.addEventListener("mousedown", () => {
+        input.value = item.dataset.nombre;
+        dropdown.style.display = "none";
+      });
+      item.addEventListener("mouseover", () => item.style.background = "var(--hover)");
+      item.addEventListener("mouseout", () => item.style.background = "");
+    });
+  });
+
+  input.addEventListener("blur", () => setTimeout(() => dropdown.style.display = "none", 150));
 };
 
 window.cerrarModalEntrega = function() {
@@ -1508,16 +1536,23 @@ window.confirmarRetorno = async function() {
   } catch(e) { mostrarToast("Error al registrar retorno", "rojo"); }
 };
 
-window.cancelar = async function(id) {
-  if (!confirm("¿Seguro que deseas cancelar esta solicitud?")) return;
+// ── HERRAMIENTAS LISTA (para buscador de adicionales) ──
+const HERRAMIENTAS_LISTA = [
+  "Ariosma","Alicate","Alicate de presión","Broca","Brocha","Cepillo de alambre",
+  "Cinta adhesiva","Cinta métrica","Cuchilla","Destornillador plano","Destornillador estrella",
+  "Electrodo","Escuadra falsa","Gira tuerca","Granetero","Guantes","Lente",
+  "Lima cuadrada","Lima triangular","Lima media caña","Lima redonda","Llave ajustable",
+  "Llave allen","Llave de mandril","Llave de tomo","Llave de tuercas","Máscara de soldar",
+  "Marcador numérico","Martillo","Mazo de goma","Nacho de 1/2","Nivel magnético",
+  "Nivel 90","Pie de rey","Pinzas","Piqueta","Porta broca","Segueta","Tarraja de 1/2x13"
+].map(nombre => ({ nombre }));
+
+window.anular = async function(id) {
+  if (!confirm("¿Seguro que deseas anular esta solicitud?")) return;
   try {
     await updateDoc(doc(db, "solicitudes", id), { estado: "cancelada" });
-    const s = todasSolicitudes.find(x => x.id === id);
-    if (s) s.estado = "cancelada";
-    actualizarContadores();
-    renderTabla();
-    mostrarToast("Solicitud cancelada");
-  } catch(e) { mostrarToast("Error al cancelar", "rojo"); }
+    mostrarToast("Solicitud anulada");
+  } catch(e) { mostrarToast("Error al anular", "rojo"); }
 };
 </script>
 </body>
