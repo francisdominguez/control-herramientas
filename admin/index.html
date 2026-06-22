@@ -895,59 +895,6 @@
         </div>
       </div>
 
-      <!-- ── MODAL: NUEVO PRÉSTAMO PROFESOR ── -->
-      <div class="modal-overlay" id="modal-nuevo-pp">
-        <div class="modal" style="max-width:560px">
-          <div class="modal-titulo">
-            ➕ Nuevo préstamo a profesor
-            <button class="modal-cerrar" onclick="cerrarModalNuevoProf()">✕</button>
-          </div>
-
-          <div class="modal-campo">
-            <label>Profesor</label>
-            <select id="pp-select-profesor" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
-              <option value="">Selecciona un profesor</option>
-            </select>
-          </div>
-
-          <div class="modal-campo">
-            <label>Laboratorio / Taller</label>
-            <select id="pp-select-laboratorio" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
-              <option value="">Selecciona un laboratorio</option>
-            </select>
-          </div>
-
-          <div class="modal-campo">
-            <label>Herramientas entregadas</label>
-            <div id="pp-lista-herramientas" style="background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:10px;max-height:280px;overflow-y:auto">
-              <!-- filas generadas por JS -->
-            </div>
-            <button type="button" onclick="ppAgregarFila()" class="btn btn-outline" style="margin-top:8px;width:100%">+ Agregar herramienta</button>
-          </div>
-
-          <div class="modal-acciones">
-            <button class="btn btn-outline" onclick="cerrarModalNuevoProf()">Cancelar</button>
-            <button class="btn btn-verde" id="pp-btn-confirmar" onclick="confirmarNuevoPrestamoProf()">✅ Registrar entrega</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── MODAL: RETORNO PROFESOR ── -->
-      <div class="modal-overlay" id="modal-retorno-pp">
-        <div class="modal" style="max-width:520px">
-          <div class="modal-titulo">
-            ↩ Retorno — <span id="pp-retorno-nombre"></span>
-            <button class="modal-cerrar" onclick="cerrarModalRetornoProf()">✕</button>
-          </div>
-          <p style="font-size:13px;color:var(--texto-dim);margin-bottom:14px">Marca el estado de cada herramienta al momento de la devolución.</p>
-          <div id="pp-retorno-lista"></div>
-          <div class="modal-acciones">
-            <button class="btn btn-outline" onclick="cerrarModalRetornoProf()">Cancelar</button>
-            <button class="btn btn-verde" onclick="confirmarRetornoProf()">✅ Confirmar retorno</button>
-          </div>
-        </div>
-      </div>
-
       <div class="vista" id="vista-material-gastable">
         <div class="pagina-titulo"><h2>Material Gastable</h2><p>Próximamente</p></div>
         <div class="vacio"><div class="vacio-icono">🚧</div><p>Esta sección se construirá en la siguiente fase.</p></div>
@@ -991,6 +938,54 @@
     </div><!-- /contenido -->
   </div><!-- /shell -->
 </div><!-- /app -->
+
+<!-- ── MODAL: NUEVO PRÉSTAMO PROFESOR ── -->
+<div class="modal-overlay" id="modal-nuevo-pp">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-titulo">
+      ➕ Nuevo préstamo a profesor
+      <button class="modal-cerrar" onclick="cerrarModalNuevoProf()">✕</button>
+    </div>
+    <div class="modal-campo">
+      <label>Profesor</label>
+      <select id="pp-select-profesor" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+        <option value="">Selecciona un profesor</option>
+      </select>
+    </div>
+    <div class="modal-campo">
+      <label>Laboratorio / Taller</label>
+      <select id="pp-select-laboratorio" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+        <option value="">Selecciona un laboratorio</option>
+      </select>
+    </div>
+    <div class="modal-campo">
+      <label>Herramientas entregadas</label>
+      <div id="pp-lista-herramientas" style="background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:10px;max-height:280px;overflow-y:auto">
+      </div>
+      <button type="button" onclick="ppAgregarFila()" class="btn btn-outline" style="margin-top:8px;width:100%">+ Agregar herramienta</button>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalNuevoProf()">Cancelar</button>
+      <button class="btn btn-verde" id="pp-btn-confirmar" onclick="confirmarNuevoPrestamoProf()">✅ Registrar entrega</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: RETORNO PROFESOR ── -->
+<div class="modal-overlay" id="modal-retorno-pp">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-titulo">
+      ↩ Retorno — <span id="pp-retorno-nombre"></span>
+      <button class="modal-cerrar" onclick="cerrarModalRetornoProf()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--texto-dim);margin-bottom:14px">Marca el estado de cada herramienta al momento de la devolución.</p>
+    <div id="pp-retorno-lista"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalRetornoProf()">Cancelar</button>
+      <button class="btn btn-verde" onclick="confirmarRetornoProf()">✅ Confirmar retorno</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── MODAL VER SOLICITUD ── -->
 <div class="modal-overlay" id="modal-solicitud">
