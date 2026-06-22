@@ -40,85 +40,13 @@ body {
 }
 
 .bienvenida-logo-area {
-  padding: 32px 24px 16px;
-  position: relative;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
 }
 
-.utesiano-wrap {
-  position: relative;
+.img-utesiano {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.corazon-amarillo {
-  position: absolute;
-  right: 8px;
-  top: -16px;
-  font-size: 100px;
-  color: var(--amarillo);
-  line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(249,208,10,0.3));
-  z-index: 1;
-}
-
-.utesiano-texto {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1;
-}
-
-.utesiano-grande {
-  font-family: 'Georgia', serif;
-  font-style: italic;
-  font-size: 52px;
-  font-weight: 700;
-  color: var(--verde);
-  letter-spacing: -1px;
-}
-
-.utesiano-de {
-  font-family: 'Georgia', serif;
-  font-style: italic;
-  font-size: 28px;
-  color: var(--verde);
-  margin-left: 40px;
-}
-
-.utesa-seal {
-  position: absolute;
-  left: 16px;
-  bottom: -8px;
-  z-index: 3;
-}
-
-.seal-circle {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 3px solid var(--verde);
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--verde);
-  line-height: 1.1;
-}
-
-.seal-is {
-  font-size: 14px;
-  font-weight: 900;
+  display: block;
 }
 
 .bienvenida-texto {
