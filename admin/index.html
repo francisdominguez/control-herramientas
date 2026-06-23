@@ -339,84 +339,88 @@
   .kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 22px;
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
   .kpi-card {
     background: var(--card);
     border: 1px solid var(--borde);
-    border-radius: 14px;
-    padding: 18px 20px;
-    position: relative;
-    overflow: hidden;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
-  }
-
-  .kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    position: relative;
+    overflow: hidden;
   }
 
   .kpi-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
   }
 
   .kpi-card.amarillo::before { background: var(--amarillo); }
   .kpi-card.verde::before { background: var(--verde); }
-  .kpi-card.azul::before { background: var(--azul); }
-  .kpi-card.morado::before { background: var(--morado); }
+  .kpi-card.azul::before { background: var(--verde); }
+  .kpi-card.morado::before { background: var(--verde-dim, #1b5e20); }
+
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+  }
+
+  .kpi-icono {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    background: rgba(46,125,50,0.12);
+  }
+
+  .kpi-card.amarillo .kpi-icono { background: rgba(245,158,11,0.12); }
+
+  .kpi-info { flex: 1; min-width: 0; }
 
   .kpi-top {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 2px;
   }
 
   .kpi-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--texto-dim);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-
-  .kpi-icono {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-
-  .kpi-card.amarillo .kpi-icono { background: rgba(245,158,11,0.15); }
-  .kpi-card.verde .kpi-icono { background: rgba(34,197,94,0.15); }
-  .kpi-card.azul .kpi-icono { background: rgba(59,130,246,0.15); }
-  .kpi-card.morado .kpi-icono { background: rgba(139,92,246,0.15); }
 
   .kpi-numero {
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 800;
     line-height: 1;
     letter-spacing: -1px;
+    color: var(--verde);
   }
 
   .kpi-card.amarillo .kpi-numero { color: var(--amarillo); }
-  .kpi-card.verde .kpi-numero { color: var(--verde); }
-  .kpi-card.azul .kpi-numero { color: var(--azul); }
-  .kpi-card.morado .kpi-numero { color: var(--morado); }
 
   .kpi-sub {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--texto-dim);
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* DASH GRID */
@@ -1047,36 +1051,36 @@
         <!-- KPI Cards -->
         <div class="kpi-grid">
           <div class="kpi-card amarillo" data-vista="solicitudes">
-            <div class="kpi-top">
-              <span class="kpi-label">Pendientes</span>
-              <div class="kpi-icono">⏳</div>
+            <div class="kpi-icono">⏳</div>
+            <div class="kpi-info">
+              <div class="kpi-top"><span class="kpi-label">Pendientes</span></div>
+              <div class="kpi-numero" id="res-pendientes">—</div>
+              <div class="kpi-sub">sin atender</div>
             </div>
-            <div class="kpi-numero" id="res-pendientes">—</div>
-            <div class="kpi-sub">↗ solicitudes sin atender</div>
           </div>
           <div class="kpi-card verde" data-vista="prestadas">
-            <div class="kpi-top">
-              <span class="kpi-label">En Préstamo</span>
-              <div class="kpi-icono">🔄</div>
+            <div class="kpi-icono">🔧</div>
+            <div class="kpi-info">
+              <div class="kpi-top"><span class="kpi-label">En Préstamo</span></div>
+              <div class="kpi-numero" id="res-prestadas">—</div>
+              <div class="kpi-sub">fuera del taller</div>
             </div>
-            <div class="kpi-numero" id="res-prestadas">—</div>
-            <div class="kpi-sub">herramientas fuera del taller</div>
           </div>
           <div class="kpi-card azul" data-vista="devoluciones">
-            <div class="kpi-top">
-              <span class="kpi-label">Devueltas Hoy</span>
-              <div class="kpi-icono">✅</div>
+            <div class="kpi-icono">↩</div>
+            <div class="kpi-info">
+              <div class="kpi-top"><span class="kpi-label">Devueltas Hoy</span></div>
+              <div class="kpi-numero" id="res-hoy">—</div>
+              <div class="kpi-sub">retornos de hoy</div>
             </div>
-            <div class="kpi-numero" id="res-hoy">—</div>
-            <div class="kpi-sub">retornos registrados hoy</div>
           </div>
           <div class="kpi-card morado">
-            <div class="kpi-top">
-              <span class="kpi-label">Total General</span>
-              <div class="kpi-icono">📋</div>
+            <div class="kpi-icono">📋</div>
+            <div class="kpi-info">
+              <div class="kpi-top"><span class="kpi-label">Total General</span></div>
+              <div class="kpi-numero" id="res-total">—</div>
+              <div class="kpi-sub">en el sistema</div>
             </div>
-            <div class="kpi-numero" id="res-total">—</div>
-            <div class="kpi-sub">solicitudes en el sistema</div>
           </div>
         </div>
 
