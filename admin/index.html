@@ -1237,7 +1237,14 @@ const porPagina = 10;
 async function cargarSolicitudes() {
   try {
     onSnapshot(query(collection(db, "solicitudes"), orderBy("creadoEn", "desc")), (snap) => {
-      todasSolicitudes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      todasSolicitudes = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(s => {
+          if (!s.creadoEn) return false;
+          const fecha = s.creadoEn.toDate ? s.creadoEn.toDate() : new Date(s.creadoEn);
+          return fecha >= hoy;
+        });
       actualizarContadores();
       cargarSelectores();
       renderTabla();
@@ -1843,7 +1850,7 @@ window.ppAgregarFila = function() {
       <input type="text" placeholder="Herramienta..." autocomplete="off"
         style="width:100%;padding:8px 10px;background:var(--card2);border:1px solid var(--borde);border-radius:7px;color:var(--texto);font-size:13px"
         oninput="ppFiltrarDropdown(this)" onfocus="ppFiltrarDropdown(this)" onblur="setTimeout(()=>this.parentNode.querySelector('.pp-drop').style.display='none',150)">
-      <div class="pp-drop" style="display:none;position:absolute;bottom:100%;left:0;right:0;background:var(--card2);border:1px solid var(--borde);border-radius:7px;z-index:200;max-height:160px;overflow-y:auto;margin-bottom:2px"></div>
+      <div class="pp-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card2);border:1px solid var(--borde);border-radius:7px;z-index:200;max-height:220px;min-height:110px;overflow-y:auto;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"></div>
     </div>
     <input type="number" min="1" value="1" placeholder="Cant."
       style="width:70px;padding:8px 10px;background:var(--card2);border:1px solid var(--borde);border-radius:7px;color:var(--texto);font-size:13px">
