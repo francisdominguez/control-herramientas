@@ -941,7 +941,7 @@
 
 <!-- ── MODAL: NUEVO PRÉSTAMO PROFESOR ── -->
 <div class="modal-overlay" id="modal-nuevo-pp">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:560px;overflow:visible">
     <div class="modal-titulo">
       ➕ Nuevo préstamo a profesor
       <button class="modal-cerrar" onclick="cerrarModalNuevoProf()">✕</button>
@@ -960,7 +960,7 @@
     </div>
     <div class="modal-campo">
       <label>Herramientas entregadas</label>
-      <div id="pp-lista-herramientas" style="background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:10px;max-height:280px;overflow-y:auto">
+      <div id="pp-lista-herramientas" style="background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:10px;overflow:visible">
       </div>
       <button type="button" onclick="ppAgregarFila()" class="btn btn-outline" style="margin-top:8px;width:100%">+ Agregar herramienta</button>
     </div>
@@ -1704,7 +1704,14 @@ const LABORATORIOS_PP = [
 async function cargarPrestamosProf() {
   try {
     onSnapshot(query(collection(db, "prestamos_profesores"), orderBy("creadoEn", "desc")), snap => {
-      todosPrestamosProf = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+      todosPrestamosProf = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(p => {
+          if (!p.creadoEn) return false;
+          const fecha = p.creadoEn.toDate ? p.creadoEn.toDate() : new Date(p.creadoEn);
+          return fecha >= hoy;
+        });
       ppActualizarContadores();
       ppRenderTabla();
     });
