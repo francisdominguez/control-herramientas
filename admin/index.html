@@ -1737,12 +1737,23 @@ window.abrirModal = function(id) {
       <div class="modal-campo"><label>Profesor</label><div class="valor">${s.profesor || "—"}</div></div>
       <div class="modal-campo"><label>Laboratorio / Taller</label><div class="valor">${s.laboratorio || "—"}</div></div>
     </div>
-    <div class="modal-campo"><label>Estado</label><span class="badge badge-${s.estado}">${s.estado}</span></div>
+    <div class="modal-campo"><label>Estado</label><span class="badge badge-${s.estado}">${s.estado}</span>${s.tieneIncidencias ? ' <span class="badge badge-cancelada">⚠️ Con incidencia</span>' : ''}</div>
     <div class="modal-campo"><label>Fecha</label><div class="valor">${formatFecha(s.creadoEn)}</div></div>
     <div class="modal-campo">
       <label>Herramientas solicitadas</label>
       <div class="modal-herramientas">${herramientas || "—"}</div>
     </div>
+    ${s.herramientasRetorno && s.herramientasRetorno.length > 0 ? `
+    <div class="modal-campo">
+      <label>Estado de retorno</label>
+      <div class="modal-herramientas">
+        ${s.herramientasRetorno.map(h => {
+          const iconos = { retornada: '✅', no_retornada: '❌', dañada: '🔴', perdida: '⚠️' };
+          const icono = iconos[h.estadoRetorno] || '❓';
+          return `<div class="modal-herramienta-item"><span>${h.nombre}</span><span>${icono} ${h.estadoRetorno}</span></div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
   `;
 
   const acciones = document.getElementById("modal-acciones");
@@ -1984,11 +1995,14 @@ window.confirmarRetorno = async function() {
     }
   });
 
+  const hayIncidencias = incidencias.length > 0;
+
   try {
     await updateDoc(doc(db, "solicitudes", solicitudActivaId), {
       estado: "retornada",
       retornadoEn: serverTimestamp(),
-      herramientasRetorno: resultado
+      herramientasRetorno: resultado,
+      tieneIncidencias: hayIncidencias
     });
 
     // Registrar incidencias si las hay
@@ -2005,7 +2019,11 @@ window.confirmarRetorno = async function() {
     }
 
     const sx = todasSolicitudes.find(x => x.id === solicitudActivaId);
-    if (sx) sx.estado = "retornada";
+    if (sx) {
+      sx.estado = "retornada";
+      sx.tieneIncidencias = hayIncidencias;
+      sx.herramientasRetorno = resultado;
+    }
     actualizarContadores();
     renderTabla();
     cargarDashboard();
