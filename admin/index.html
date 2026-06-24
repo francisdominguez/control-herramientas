@@ -1642,7 +1642,8 @@ function renderTabla() {
   const filtradas = solicitudesFiltradas();
   const total = filtradas.length;
   const inicio = (paginaActual - 1) * porPagina;
-  const pagina = filtradas.slice(inicio, inicio + porPagina);
+  const porTaller = [...filtradas].sort((a,b) => (a.laboratorio||"Sin taller").localeCompare(b.laboratorio||"Sin taller"));
+  const pagina = porTaller.slice(inicio, inicio + porPagina);
   const wrap = document.getElementById("tabla-solicitudes-wrap");
 
   if (pagina.length === 0) {
@@ -1668,34 +1669,33 @@ function renderTabla() {
         </tr>
       </thead>
       <tbody>
-        ${pagina.map((s, i) => `
-          <tr>
-            <td style="color:var(--texto-dim)">${inicio + i + 1}</td>
-            <td style="font-size:12px;color:var(--texto-dim)">${formatFecha(s.creadoEn)}</td>
-            <td>
-              <div class="est-avatar">
-                <div class="est-circulo" style="background:${colorEstudiante(s.nombre||"")}22;color:${colorEstudiante(s.nombre||"")}">
-                  ${iniciales(s.nombre, s.apellido)}
-                </div>
-                <div>
-                  <div class="est-nombre">${s.nombre} ${s.apellido}</div>
-                </div>
-              </div>
-            </td>
-            <td style="font-size:12px">${s.matricula || "—"}</td>
-            <td style="font-size:12px">${s.profesor || "—"}</td>
-            <td style="font-size:12px">${s.laboratorio || "—"}</td>
-            <td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">${(s.herramientas||[]).length}</span></td>
-            <td><span class="badge badge-${s.estado}">${s.estado}</span>${s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : ''}</td>
-            <td>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-outline" onclick="abrirModal('${s.id}')">👁 Ver</button>
-                ${s.estado === "pendiente" ? `<button class="btn btn-verde" onclick="entregar('${s.id}')">✓ Entregar</button>` : ""}
-                ${s.estado === "entregada" ? `<button class="btn btn-azul" onclick="retornar('${s.id}')">↩ Retornar</button>` : ""}
-              </div>
-            </td>
-          </tr>
-        `).join("")}
+        ${(() => {
+          let html = "";
+          let tallerActual = null;
+          pagina.forEach((s, i) => {
+            const taller = s.laboratorio || "Sin taller";
+            if (taller !== tallerActual) {
+              tallerActual = taller;
+              html += '<tr><td colspan="9" style="background:var(--card2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--texto-dim);letter-spacing:0.05em;border-top:2px solid var(--borde)">🏭 ' + taller + '</td></tr>';
+            }
+            const color = colorEstudiante(s.nombre || "");
+            const inc = s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : '';
+            const btnEntregar = s.estado === "pendiente" ? '<button class="btn btn-verde" onclick="entregar(\'' + s.id + '\')">✓ Entregar</button>' : '';
+            const btnRetornar = s.estado === "entregada" ? '<button class="btn btn-azul" onclick="retornar(\'' + s.id + '\')">↩ Retornar</button>' : '';
+            html += '<tr>'
+              + '<td style="color:var(--texto-dim)">' + (inicio + i + 1) + '</td>'
+              + '<td style="font-size:12px;color:var(--texto-dim)">' + formatFecha(s.creadoEn) + '</td>'
+              + '<td><div class="est-avatar"><div class="est-circulo" style="background:' + color + '22;color:' + color + '">' + iniciales(s.nombre, s.apellido) + '</div><div><div class="est-nombre">' + s.nombre + ' ' + s.apellido + '</div></div></div></td>'
+              + '<td style="font-size:12px">' + (s.matricula || "—") + '</td>'
+              + '<td style="font-size:12px">' + (s.profesor || "—") + '</td>'
+              + '<td style="font-size:12px">' + (s.laboratorio || "—") + '</td>'
+              + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + (s.herramientas||[]).length + '</span></td>'
+              + '<td><span class="badge badge-' + s.estado + '">' + s.estado + '</span>' + inc + '</td>'
+              + '<td><div style="display:flex;gap:6px"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnEntregar + btnRetornar + '</div></td>'
+              + '</tr>';
+          });
+          return html;
+        })()}
       </tbody>
     </table>
   `;
@@ -1772,6 +1772,12 @@ window.abrirModal = function(id) {
     const b = document.createElement("button");
     b.className = "btn btn-azul"; b.textContent = "↩ Retornar";
     b.onclick = () => { cerrarModal(); retornar(id); };
+    acciones.appendChild(b);
+  }
+  if (s.estado === "retornada") {
+    const b = document.createElement("div");
+    b.style.cssText = "color:var(--verde);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px";
+    b.innerHTML = "✅ Herramientas retornadas" + (s.tieneIncidencias ? " <span style="color:var(--rojo)">· con incidencias</span>" : "");
     acciones.appendChild(b);
   }
 
