@@ -1691,7 +1691,7 @@ function renderTabla() {
               + '<td style="font-size:12px">' + (s.laboratorio||"—") + '</td>'
               + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + (s.herramientas||[]).length + '</span></td>'
               + '<td><span class="badge badge-' + s.estado + '">' + s.estado + '</span>' + inc + '</td>'
-              + '<td><div style="display:flex;gap:6px"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + '</div></td>'
+              + '<td><div style="display:flex;gap:6px"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + (s.estado === "retornada" ? '<span style="font-size:11px;color:var(--verde);font-weight:700">✅ Retornada</span>' : '') + '</div></td>'
               + '</tr>';
           });
           return html;
