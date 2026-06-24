@@ -987,7 +987,7 @@
               <div class="stat-mini-label">Entregadas hoy</div>
             </div>
           </div>
-          <div class="stat-mini">
+          <div class="stat-mini" style="cursor:pointer" onclick="verIncidencias()" title="Ver solicitudes con incidencias">
             <div class="stat-mini-icono" style="background:rgba(249,115,22,0.12)">⚠️</div>
             <div>
               <div class="stat-mini-num" id="dash-incidencias">—</div>
@@ -1078,6 +1078,7 @@
             <option value="entregada">Entregada</option>
             <option value="retornada">Retornada</option>
             <option value="cancelada">Cancelada</option>
+            <option value="incidencia">⚠️ Con Incidencia</option>
           </select>
           <select id="filtro-profesor" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
             <option value="">Profesor: Todos</option>
@@ -1413,6 +1414,22 @@ onAuthStateChanged(auth, user => {
   }
 });
 
+// ── VER INCIDENCIAS DESDE DASHBOARD ──
+window.verIncidencias = function() {
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("activo"));
+  document.querySelectorAll(`.nav-item[data-vista="solicitudes"]`).forEach(n => n.classList.add("activo"));
+  document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
+  document.getElementById("vista-solicitudes")?.classList.add("activa");
+  // Aplicar filtro automático
+  setTimeout(() => {
+    const filtroEstado = document.getElementById("filtro-estado");
+    if (filtroEstado) {
+      filtroEstado.value = "incidencia";
+      filtroEstado.dispatchEvent(new Event("change"));
+    }
+  }, 100);
+};
+
 // ── TOGGLE SIDEBAR ──
 const shell = document.querySelector(".shell");
 document.getElementById("btn-toggle-sidebar").addEventListener("click", () => {
@@ -1490,7 +1507,7 @@ async function cargarDashboard() {
 
     const pendientes  = todas.filter(s => s.estado === "pendiente");
     const entregadas  = todas.filter(s => s.estado === "entregada");
-    const incidencias = todas.filter(s => s.tieneIncidencia);
+    const incidencias = todas.filter(s => s.tieneIncidencias);
     const profActivos = prestProf.filter(p => p.estado === "activo");
 
     const devHoy = todas.filter(s => {
@@ -1611,7 +1628,11 @@ function solicitudesFiltradas() {
   const profesor = document.getElementById("filtro-profesor").value;
   return todasSolicitudes.filter(s => {
     const textoMatch = !buscar || `${s.nombre} ${s.apellido} ${s.matricula}`.toLowerCase().includes(buscar);
-    const estadoMatch = !estado || s.estado === estado;
+    const estadoMatch = !estado
+      ? true
+      : estado === "incidencia"
+        ? s.tieneIncidencias === true
+        : s.estado === estado;
     const profMatch = !profesor || s.profesor === profesor;
     return textoMatch && estadoMatch && profMatch;
   });
@@ -1665,7 +1686,7 @@ function renderTabla() {
             <td style="font-size:12px">${s.profesor || "—"}</td>
             <td style="font-size:12px">${s.laboratorio || "—"}</td>
             <td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">${(s.herramientas||[]).length}</span></td>
-            <td><span class="badge badge-${s.estado}">${s.estado}</span></td>
+            <td><span class="badge badge-${s.estado}">${s.estado}</span>${s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : ''}</td>
             <td>
               <div style="display:flex;gap:6px">
                 <button class="btn btn-outline" onclick="abrirModal('${s.id}')">👁 Ver</button>
