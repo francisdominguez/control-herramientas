@@ -1576,14 +1576,7 @@ const porPagina = 10;
 async function cargarSolicitudes() {
   try {
     onSnapshot(query(collection(db, "solicitudes"), orderBy("creadoEn", "desc")), (snap) => {
-      const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-      todasSolicitudes = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(s => {
-          if (!s.creadoEn) return false;
-          const fecha = s.creadoEn.toDate ? s.creadoEn.toDate() : new Date(s.creadoEn);
-          return fecha >= hoy;
-        });
+      todasSolicitudes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       actualizarContadores();
       cargarSelectores();
       renderTabla();
@@ -1594,12 +1587,11 @@ async function cargarSolicitudes() {
 
 function actualizarContadores() {
   actualizarTabs();
-  document.getElementById("sol-total").textContent = todasSolicitudes.length;
-  document.getElementById("sol-pend").textContent = todasSolicitudes.filter(s=>s.estado==="pendiente").length;
-  document.getElementById("sol-ent").textContent = todasSolicitudes.filter(s=>s.estado==="entregada").length;
-  document.getElementById("sol-can").textContent = todasSolicitudes.filter(s=>s.estado==="cancelada").length;
-  document.getElementById("badge-pendientes").textContent = todasSolicitudes.filter(s=>s.estado==="pendiente").length;
-  document.getElementById("res-pendientes").textContent = todasSolicitudes.filter(s=>s.estado==="pendiente").length;
+  const pend = todasSolicitudes.filter(s=>s.estado==="pendiente").length;
+  const badgeEl = document.getElementById("badge-pendientes");
+  const resPendEl = document.getElementById("res-pendientes");
+  if (badgeEl) badgeEl.textContent = pend;
+  if (resPendEl) resPendEl.textContent = pend;
 }
 
 function cargarSelectores() {
@@ -1891,7 +1883,7 @@ window.confirmarEntrega = async function() {
     cargarDashboard();
     cerrarModalEntrega();
     mostrarToast("✓ Herramientas entregadas correctamente");
-  } catch(e) { mostrarToast("Error al entregar", "rojo"); }
+  } catch(e) { console.error("Error al entregar:", e); mostrarToast("Error al entregar: " + e.message, "rojo"); }
 };
 
 // ─── MODAL RETORNO ───
