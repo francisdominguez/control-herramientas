@@ -7,7 +7,11 @@ import {
   addDoc,
   query,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  where,
+  updateDoc,
+  doc,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -34,5 +38,9 @@ export {
   query,
   orderBy,
   serverTimestamp,
+  where,
+  updateDoc,
+  doc,
+  Timestamp,
   firebaseConfigurado
 };
