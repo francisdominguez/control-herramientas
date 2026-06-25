@@ -306,23 +306,33 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
   solicitudExistente = solicitud;
   cantidadesModalExtra = {};
 
-  // Mostrar herramientas existentes con indicador si son adicionales
+  // Herramientas ya solicitadas
   const listaActual = (solicitud.herramientas || [])
-    .map(h => `<li style="color:#e6edf3">${h.nombre} × ${h.cantidad}${h.adicional ? ' <span style="color:#f59e0b;font-size:0.75rem">(adicional)</span>' : ''}</li>`)
+    .map(h => `
+      <li style="padding:3px 0;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--verde);font-weight:700">${h.cantidad}×</span>
+        ${h.nombre}
+        ${h.adicional ? '<span style="background:var(--amarillo);color:#333;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px">adicional</span>' : ''}
+      </li>`)
     .join("");
 
+  // Grid de herramientas con las mismas clases del formulario
   let gridHtml = "";
   herramientasDisp.forEach(h => {
     cantidadesModalExtra[h.codigo] = 0;
     const max = Number.isFinite(h.cantidadDisponible) ? h.cantidadDisponible : 5;
     gridHtml += `
-      <div style="background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center">
-        <div style="font-size:0.85rem;font-weight:600;color:#e6edf3">${h.nombre}</div>
-        <div style="font-size:0.75rem;color:#7d8590">Disp. ${max}</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">
-          <button type="button" data-mcodigo="${h.codigo}" data-maccion="restar" style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;border-radius:4px;width:28px;height:28px;cursor:pointer;font-size:16px">−</button>
-          <span id="mcant-${h.codigo}" style="color:#e6edf3;font-weight:700;min-width:24px;text-align:center">0</span>
-          <button type="button" data-mcodigo="${h.codigo}" data-maccion="sumar" ${max === 0 ? "disabled" : ""} style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;border-radius:4px;width:28px;height:28px;cursor:pointer;font-size:16px">+</button>
+      <div class="tarjeta-herramienta">
+        <div class="icono">
+          <img src="${h.imagen}" alt="${h.nombre}"
+               onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'icono-respaldo',textContent:'${h.icono || "🔧"}'}))">
+        </div>
+        <div class="nombre">${h.nombre}</div>
+        <div class="disponible">Disp. ${max}</div>
+        <div class="contador">
+          <button type="button" data-mcodigo="${h.codigo}" data-maccion="restar">−</button>
+          <span class="cantidad" id="mcant-${h.codigo}">0</span>
+          <button type="button" data-mcodigo="${h.codigo}" data-maccion="sumar" ${max === 0 ? "disabled" : ""}>+</button>
         </div>
       </div>
     `;
@@ -331,23 +341,51 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
   const modal = document.createElement("div");
   modal.id = "modal-duplicado";
   modal.style.cssText = `
-    position:fixed;inset:0;background:rgba(0,0,0,0.85);
+    position:fixed;inset:0;background:rgba(0,0,0,0.6);
     display:flex;align-items:center;justify-content:center;
-    z-index:9999;padding:1rem;
+    z-index:9999;padding:16px;
   `;
   modal.innerHTML = `
-    <div style="background:#0d1117;border:1px solid #30363d;border-radius:12px;padding:1.5rem;max-width:520px;width:100%;max-height:90vh;overflow-y:auto">
-      <h2 style="margin:0 0 0.5rem;color:#f59e0b;font-size:1.2rem">⚠️ Ya tienes una solicitud activa hoy</h2>
-      <p style="margin:0 0 1rem;color:#7d8590;font-size:0.9rem">Solicitud #${solicitud.numeroSolicitud || solicitud.id} · Estado: <span style="color:#3fb950;font-weight:700">${solicitud.estado}</span></p>
-      <p style="margin:0 0 0.4rem;font-size:0.85rem;color:#7d8590">Herramientas ya solicitadas:</p>
-      <ul style="margin:0 0 1rem;padding-left:1.2rem;color:#e6edf3;font-size:0.85rem">${listaActual}</ul>
-      <p style="margin:0 0 0.6rem;font-size:0.9rem;color:#3fb950">Agregar más herramientas a esta solicitud:</p>
-      <div id="modal-grid-herramientas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem">
-        ${gridHtml}
+    <div style="background:#fff;border-radius:12px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 4px 24px rgba(0,0,0,0.18)">
+
+      <!-- Encabezado tipo taller-header -->
+      <div style="background:var(--verde-oscuro);border-radius:12px 12px 0 0;padding:18px 20px 14px;text-align:center">
+        <div style="font-size:22px;margin-bottom:6px">➕ 🔧</div>
+        <h2 style="margin:0;color:#fff;font-size:17px;font-weight:800;line-height:1.3">Agregar herramientas adicionales</h2>
+        <p style="margin:6px 0 0;color:#a5d6a7;font-size:13px">
+          Solicitud #${solicitud.numeroSolicitud || solicitud.id} &nbsp;·&nbsp;
+          Estado: <strong style="color:var(--amarillo)">${solicitud.estado}</strong>
+        </p>
       </div>
-      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:12px">
-        <button id="btn-modal-cancelar" style="padding:0.6rem 1.2rem;border-radius:8px;border:1px solid #30363d;background:transparent;color:#7d8590;cursor:pointer">Cancelar</button>
-        <button id="btn-modal-agregar" style="padding:0.6rem 1.2rem;border-radius:8px;border:none;background:#3fb950;color:#000;font-weight:700;cursor:pointer">+ Agregar herramientas</button>
+
+      <div style="padding:18px 20px">
+
+        <!-- Herramientas ya solicitadas -->
+        <div style="background:var(--verde-claro);border:1.5px solid var(--verde-borde);border-radius:8px;padding:12px 16px;margin-bottom:16px">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:var(--verde)">📋 Herramientas ya solicitadas:</p>
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--texto);line-height:1.8">
+            ${listaActual || '<li style="color:var(--gris)">Ninguna aún</li>'}
+          </ul>
+        </div>
+
+        <!-- Separador con etiqueta -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="flex:1;height:1px;background:#ddd"></div>
+          <span style="font-size:12px;font-weight:700;color:var(--verde);white-space:nowrap">SELECCIONA LAS ADICIONALES</span>
+          <div style="flex:1;height:1px;background:#ddd"></div>
+        </div>
+
+        <!-- Grid igual al del formulario -->
+        <div id="modal-grid-herramientas" class="grid-herramientas" style="margin-bottom:16px">
+          ${gridHtml}
+        </div>
+
+        <!-- Botones -->
+        <div style="display:flex;gap:10px;margin-top:4px">
+          <button id="btn-modal-cancelar" style="flex:1;padding:13px;border-radius:8px;border:1.5px solid #c8c8c8;background:#fff;color:var(--gris);font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>
+          <button id="btn-modal-agregar" class="btn-enviar" style="flex:2;margin:0">+ Agregar herramientas</button>
+        </div>
+
       </div>
     </div>
   `;
