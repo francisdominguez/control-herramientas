@@ -19,6 +19,8 @@
     --amarillo:  #d29922;
     --rojo:      #f85149;
     --azul:      #388bfd;
+    --azul-dim:  #1f6feb;
+    --azul-glow: rgba(56,139,253,0.15);
     --texto:     #e6edf3;
     --texto-dim: #7d8590;
     --borde:     #30363d;
@@ -44,6 +46,8 @@
     --amarillo:  #b45309;
     --rojo:      #cf222e;
     --azul:      #0969da;
+    --azul-dim:  #0550ae;
+    --azul-glow: rgba(9,105,218,0.1);
     --texto:     #1f2328;
     --texto-dim: #636c76;
     --borde:     #d0d7de;
@@ -681,8 +685,8 @@
   }
 
   .badge-pendiente  { background: rgba(210,153,34,0.15); color: var(--amarillo); border: 1px solid rgba(210,153,34,0.3); }
-  .badge-entregada  { background: var(--verde-glow); color: var(--verde); border: 1px solid rgba(63,185,80,0.3); }
-  .badge-retornada  { background: rgba(56,139,253,0.12); color: var(--azul); border: 1px solid rgba(56,139,253,0.25); }
+  .badge-entregada  { background: var(--azul-glow); color: var(--azul); border: 1px solid rgba(56,139,253,0.3); }
+  .badge-retornada  { background: var(--verde-glow); color: var(--verde); border: 1px solid rgba(63,185,80,0.3); }
   .badge-cancelada  { background: rgba(248,81,73,0.1); color: var(--rojo); border: 1px solid rgba(248,81,73,0.25); }
 
   /* ═══════════════════════════════════════════
@@ -697,12 +701,14 @@
 
   .btn-verde  { background: var(--verde); color: #000; }
   .btn-verde:hover { background: var(--verde-dim); color: #fff; }
+  .btn-azul  { background: var(--azul); color: #fff; }
+  .btn-azul:hover { background: var(--azul-dim); color: #fff; }
   .btn-outline { background: transparent; border: 1px solid var(--borde); color: var(--texto-dim); }
   .btn-outline:hover { border-color: var(--verde); color: var(--verde); }
   .btn-rojo   { background: rgba(248,81,73,0.1); color: var(--rojo); border: 1px solid rgba(248,81,73,0.2); }
   .btn-rojo:hover { background: var(--rojo); color: #fff; border-color: var(--rojo); }
-  .btn-azul   { background: rgba(56,139,253,0.1); color: var(--azul); border: 1px solid rgba(56,139,253,0.2); }
-  .btn-azul:hover { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .btn-azul-outline { background: rgba(56,139,253,0.1); color: var(--azul); border: 1px solid rgba(56,139,253,0.2); }
+  .btn-azul-outline:hover { background: var(--azul); color: #fff; border-color: var(--azul); }
   .btn:disabled { opacity: .35; cursor: not-allowed; }
 
   /* ═══════════════════════════════════════════
@@ -1089,8 +1095,8 @@
         <div class="tabs-filtro">
           <button class="tab-btn activo" data-tab-estado="">Todos <span class="tab-badge" id="tab-todos">—</span></button>
           <button class="tab-btn" data-tab-estado="pendiente" style="color:var(--amarillo)">Pendientes <span class="tab-badge" id="tab-pend">—</span></button>
-          <button class="tab-btn" data-tab-estado="entregada" style="color:var(--verde)">Entregados <span class="tab-badge" id="tab-ent">—</span></button>
-          <button class="tab-btn" data-tab-estado="retornada" style="color:var(--azul)">Retorno pendiente <span class="tab-badge" id="tab-ret">—</span></button>
+          <button class="tab-btn" data-tab-estado="entregada" style="color:var(--azul)">Entregados <span class="tab-badge" id="tab-ent">—</span></button>
+          <button class="tab-btn" data-tab-estado="retornada" style="color:var(--verde)">Retornados <span class="tab-badge" id="tab-ret">—</span></button>
           <button class="tab-btn" data-tab-estado="cancelada" style="color:var(--rojo)">Canceladas <span class="tab-badge" id="tab-can">—</span></button>
         </div>
 
@@ -1309,7 +1315,7 @@
     <div id="lista-retorno" style="background:var(--bg);border-radius:8px;padding:8px;margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
     <div class="modal-acciones">
       <button class="btn btn-outline" onclick="cerrarModalRetorno()">Cerrar</button>
-      <button class="btn btn-azul" onclick="confirmarRetorno()">↩ Confirmar Retorno</button>
+      <button class="btn btn-verde" onclick="confirmarRetorno()">↩ Confirmar Retorno</button>
     </div>
   </div>
 </div>
@@ -1681,7 +1687,7 @@ function renderTabla() {
             const c = colorEstudiante(s.nombre || "");
             const inc = s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : '';
             const btnE = s.estado === "pendiente" ? '<button class="btn btn-verde" onclick="entregar(\'' + s.id + '\')">✓ Entregar</button>' : '';
-            const btnR = s.estado === "entregada" ? '<button class="btn btn-azul" onclick="retornar(\'' + s.id + '\')">↩ Retornar</button>' : '';
+            const btnR = s.estado === "entregada" ? '<button class="btn btn-verde" onclick="retornar(\'' + s.id + '\')">↩ Retornar</button>' : '';
             html += '<tr>'
               + '<td style="color:var(--texto-dim)">' + (inicio+i+1) + '</td>'
               + '<td style="font-size:12px;color:var(--texto-dim)">' + formatFecha(s.creadoEn) + '</td>'
@@ -1759,7 +1765,7 @@ window.abrirModal = function(id) {
   }
   if (s.estado === "entregada") {
     const b = document.createElement("button");
-    b.className = "btn btn-azul"; b.textContent = "↩ Retornar";
+    b.className = "btn btn-verde"; b.textContent = "↩ Retornar";
     b.onclick = () => { cerrarModal(); retornar(id); };
     acciones.appendChild(b);
   }
@@ -2137,7 +2143,7 @@ function ppRenderTabla() {
               ? '<span class="badge badge-cancelada">Con incidencias</span>'
               : '<span class="badge badge-retornada">Retornado</span>';
           const acciones = p.estado === "activo"
-            ? `<button class="btn btn-azul" onclick="abrirRetornoProf('${p.id}')">↩ Retornar</button>`
+            ? `<button class="btn btn-verde" onclick="abrirRetornoProf('${p.id}')">↩ Retornar</button>`
             : `<span style="font-size:12px;color:var(--texto-dim)">Cerrado</span>`;
           return `
             <tr>
