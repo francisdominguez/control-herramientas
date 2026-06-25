@@ -194,32 +194,37 @@ function validarFormulario() {
   return true;
 }
 
-// ---- Verificar matrícula duplicada hoy (CORREGIDO con timestamps) ----
+// ---- Verificar matrícula duplicada hoy (SIN índice compuesto) ----
 async function buscarSolicitudActivaHoy(matricula) {
   const hoy = new Date();
   const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   const fin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1);
 
   try {
+    // Consulta simple: solo por matrícula
     const snap = await getDocs(
       query(
         collection(db, "solicitudes"),
-        where("matricula", "==", matricula),
-        where("creadoEn", ">=", inicio),
-        where("creadoEn", "<", fin),
-        where("estado", "in", ["pendiente", "entregada"])
+        where("matricula", "==", matricula)
       )
     );
 
     if (snap.empty) return null;
+
+    // Filtrar en el cliente
     let found = null;
     snap.forEach(d => {
-      found = { id: d.id, ...d.data() };
+      const data = d.data();
+      const creado = data.creadoEn?.toDate?.() || new Date(data.creadoEn);
+      if (creado >= inicio && creado < fin) {
+        if (data.estado === "pendiente" || data.estado === "entregada") {
+          found = { id: d.id, ...data };
+        }
+      }
     });
     return found;
   } catch (err) {
     console.error("Error en buscarSolicitudActivaHoy:", err);
-    // Si falla la consulta (por ejemplo, falta índice), se devuelve null para no bloquear
     return null;
   }
 }
@@ -372,7 +377,6 @@ form.addEventListener("submit", async (e) => {
     const solicitudActiva = await buscarSolicitudActivaHoy(matricula);
 
     if (solicitudActiva) {
-      // Abrir modal en lugar de crear nueva
       btnEnviar.disabled = false;
       btnEnviar.textContent = "Enviar Solicitud";
       abrirModalDuplicado(solicitudActiva, herramientasDisponibles);
@@ -400,7 +404,6 @@ form.addEventListener("submit", async (e) => {
     laboratorio:  document.getElementById("laboratorio").value,
     herramientas: herramientasElegidas,
     estado:       "pendiente",
-    // Ya no guardamos 'fecha' como cadena, usamos creadoEn como timestamp
     creadoEn:     serverTimestamp()
   };
 
