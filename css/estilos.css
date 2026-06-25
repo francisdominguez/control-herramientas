@@ -442,3 +442,97 @@ body {
   z-index: 50;
   white-space: nowrap;
 }
+/* ── Modal de herramientas adicionales ── */
+.modal-adicional-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.modal-adicional-contenedor {
+  background: var(--card);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  color: var(--texto);
+}
+
+.modal-adicional-contenedor h2 {
+  margin: 0 0 0.5rem;
+  color: #f59e0b;
+  font-size: 1.2rem;
+}
+
+.modal-adicional-contenedor .subtitulo {
+  color: var(--texto-dim);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.modal-adicional-contenedor .estado-solicitud {
+  color: #3fb950;
+  font-weight: 700;
+}
+
+.modal-adicional-contenedor .lista-herramientas {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: var(--texto);
+  font-size: 0.85rem;
+}
+
+.modal-adicional-contenedor .lista-herramientas li {
+  list-style: disc;
+}
+
+.modal-adicional-contenedor .badge-adicional {
+  color: #f59e0b;
+  font-size: 0.75rem;
+}
+
+.modal-adicional-contenedor .grid-herramientas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.modal-adicional-contenedor .acciones-modal {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.btn-modal-cancelar {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: transparent;
+  color: var(--texto-dim);
+  cursor: pointer;
+}
+
+.btn-modal-agregar {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  background: #3fb950;
+  color: #000;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-modal-agregar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
