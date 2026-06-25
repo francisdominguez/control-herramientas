@@ -300,26 +300,31 @@ async function buscarSolicitudActivaHoy(matricula) {
   }
 }
 
-// ---- Modal de solicitud duplicada ----
+// ---- Modal de solicitud duplicada (con mismo diseño que formulario) ----
 function abrirModalDuplicado(solicitud, herramientasDisp) {
   solicitudExistenteId = solicitud.id;
   solicitudExistente = solicitud;
   cantidadesModalExtra = {};
 
-  // Mostrar herramientas existentes con indicador si son adicionales
   const listaActual = (solicitud.herramientas || [])
-    .map(h => `<li style="color:#e6edf3">${h.nombre} × ${h.cantidad}${h.adicional ? ' <span style="color:#f59e0b;font-size:0.75rem">(adicional)</span>' : ''}</li>`)
+    .map(h => `<li style="color:#e6edf3">${h.nombre} × ${h.cantidad}</li>`)
     .join("");
 
+  // Generar grid de herramientas con el mismo estilo que el formulario
   let gridHtml = "";
   herramientasDisp.forEach(h => {
     cantidadesModalExtra[h.codigo] = 0;
     const max = Number.isFinite(h.cantidadDisponible) ? h.cantidadDisponible : 5;
+    // Construir la tarjeta igual que en renderizarHerramientas pero con estilos en línea para el modal
     gridHtml += `
-      <div style="background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center">
-        <div style="font-size:0.85rem;font-weight:600;color:#e6edf3">${h.nombre}</div>
-        <div style="font-size:0.75rem;color:#7d8590">Disp. ${max}</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">
+      <div class="tarjeta-herramienta" style="background:#1c2128;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center;color:#e6edf3">
+        <div class="icono" style="font-size:26px;height:36px;display:flex;align-items:center;justify-content:center">
+          <img src="${h.imagen || ''}" alt="${h.nombre}" style="max-height:36px;max-width:100%;object-fit:contain"
+               onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'icono-respaldo',textContent:'${h.icono || "🔧"}'}))">
+        </div>
+        <div class="nombre" style="font-size:0.85rem;font-weight:600;color:#e6edf3;margin:4px 0;min-height:28px">${h.nombre}</div>
+        <div class="disponible" style="font-size:0.75rem;color:#7d8590">Disp. ${max}</div>
+        <div class="contador" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">
           <button type="button" data-mcodigo="${h.codigo}" data-maccion="restar" style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;border-radius:4px;width:28px;height:28px;cursor:pointer;font-size:16px">−</button>
           <span id="mcant-${h.codigo}" style="color:#e6edf3;font-weight:700;min-width:24px;text-align:center">0</span>
           <button type="button" data-mcodigo="${h.codigo}" data-maccion="sumar" ${max === 0 ? "disabled" : ""} style="background:#0d1117;border:1px solid #30363d;color:#e6edf3;border-radius:4px;width:28px;height:28px;cursor:pointer;font-size:16px">+</button>
@@ -354,7 +359,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
 
   document.body.appendChild(modal);
 
-  // ---- Eventos del grid del modal ----
+  // Eventos del grid del modal
   document.getElementById("modal-grid-herramientas").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-mcodigo]");
     if (!btn) return;
@@ -372,12 +377,10 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
     document.getElementById(`mcant-${codigo}`).textContent = cant;
   });
 
-  // ---- Botón Cancelar ----
   document.getElementById("btn-modal-cancelar").addEventListener("click", () => {
     modal.remove();
   });
 
-  // ---- Botón AGREGAR HERRAMIENTAS (CON MARCADOR "adicional: true") ----
   document.getElementById("btn-modal-agregar").addEventListener("click", async () => {
     const nuevas = Object.entries(cantidadesModalExtra)
       .filter(([_, c]) => c > 0)
@@ -387,7 +390,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
           codigo, 
           nombre: info ? info.nombre : codigo, 
           cantidad,
-          adicional: true  // 👈 MARCADOR: indica que fue agregada después
+          adicional: true
         };
       });
 
@@ -403,17 +406,10 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
     try {
       const existentes = solicitudExistente.herramientas || [];
       const mapa = {};
-      
-      // Mantener las existentes (incluyendo su propiedad 'adicional' si la tienen)
-      existentes.forEach(h => { 
-        mapa[h.codigo] = { ...h }; 
-      });
-      
-      // Agregar o sumar nuevas (con adicional: true)
+      existentes.forEach(h => { mapa[h.codigo] = { ...h }; });
       nuevas.forEach(h => {
         if (mapa[h.codigo]) {
           mapa[h.codigo].cantidad += h.cantidad;
-          // Si ya existía pero no tenía el marcador, se lo ponemos
           mapa[h.codigo].adicional = true;
         } else {
           mapa[h.codigo] = { ...h };
@@ -487,7 +483,7 @@ form.addEventListener("submit", async (e) => {
         codigo, 
         nombre: info ? info.nombre : codigo, 
         cantidad,
-        adicional: false  // Las de la solicitud original no son adicionales
+        adicional: false
       };
     });
 
