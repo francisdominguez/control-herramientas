@@ -528,7 +528,9 @@
      PÁGINAS INTERNAS — SOLICITUDES (SIMPLIFICADO)
   ═══════════════════════════════════════════ */
   .pagina-titulo {
-    display: flex; align-items: flex-start; justify-content: space-between;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
     margin-bottom: 18px; gap: 12px;
   }
 
@@ -1578,13 +1580,16 @@ function renderTabla() {
   document.getElementById(id)?.addEventListener("change", () => { paginaActual = 1; renderTabla(); });
 });
 
-// ── MODAL ──
+// ── MODAL (CORREGIDO CON BADGE "➕ Adicional") ──
 window.abrirModal = function(id) {
   const s = todasSolicitudes.find(x => x.id === id);
   if (!s) return;
-  const herramientas = (s.herramientas || []).map(h =>
-    `<div class="modal-herramienta-item"><span>${h.nombre}</span><span style="color:var(--verde);font-weight:700">x${h.cantidad}</span></div>`
-  ).join("");
+  
+  const herramientas = (s.herramientas || []).map(h => {
+    const esAdicional = h.adicional === true;
+    const badge = esAdicional ? ' <span style="background:#f59e0b;color:#000;padding:1px 8px;border-radius:12px;font-size:9px;font-weight:700;margin-left:6px">➕ Adicional</span>' : '';
+    return `<div class="modal-herramienta-item"><span>${h.nombre}${badge}</span><span style="color:var(--verde);font-weight:700">x${h.cantidad}</span></div>`;
+  }).join("");
 
   document.getElementById("modal-contenido").innerHTML = `
     <div class="modal-campo"><label>Número de solicitud</label><div class="valor">${s.numeroSolicitud || s.id.slice(0,8)}</div></div>
