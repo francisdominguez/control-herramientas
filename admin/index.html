@@ -707,8 +707,6 @@
   .btn-outline:hover { border-color: var(--verde); color: var(--verde); }
   .btn-rojo   { background: rgba(248,81,73,0.1); color: var(--rojo); border: 1px solid rgba(248,81,73,0.2); }
   .btn-rojo:hover { background: var(--rojo); color: #fff; border-color: var(--rojo); }
-  .btn-azul-outline { background: rgba(56,139,253,0.1); color: var(--azul); border: 1px solid rgba(56,139,253,0.2); }
-  .btn-azul-outline:hover { background: var(--azul); color: #fff; border-color: var(--azul); }
   .btn:disabled { opacity: .35; cursor: not-allowed; }
 
   /* ═══════════════════════════════════════════
@@ -1688,6 +1686,8 @@ function renderTabla() {
             const inc = s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : '';
             const btnE = s.estado === "pendiente" ? '<button class="btn btn-verde" onclick="entregar(\'' + s.id + '\')">✓ Entregar</button>' : '';
             const btnR = s.estado === "entregada" ? '<button class="btn btn-verde" onclick="retornar(\'' + s.id + '\')">↩ Retornar</button>' : '';
+            const btnCancelada = s.estado === "cancelada" ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(248,81,73,0.1);color:var(--rojo);border:1px solid rgba(248,81,73,0.25)">❌ Cancelada</span>' : '';
+            const btnRetornada = s.estado === "retornada" ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:var(--verde-glow);color:var(--verde);border:1px solid rgba(63,185,80,0.3)">✅ Retornada</span>' : '';
             html += '<tr>'
               + '<td style="color:var(--texto-dim)">' + (inicio+i+1) + '</td>'
               + '<td style="font-size:12px;color:var(--texto-dim)">' + formatFecha(s.creadoEn) + '</td>'
@@ -1697,7 +1697,7 @@ function renderTabla() {
               + '<td style="font-size:12px">' + (s.laboratorio||"—") + '</td>'
               + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + (s.herramientas||[]).length + '</span></td>'
               + '<td><span class="badge badge-' + s.estado + '">' + s.estado + '</span>' + inc + '</td>'
-              + '<td><div style="display:flex;gap:6px"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + (s.estado === "retornada" ? '<span style="font-size:11px;color:var(--verde);font-weight:700">✅ Retornada</span>' : '') + '</div></td>'
+              + '<td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + btnRetornada + btnCancelada + '</div></td>'
               + '</tr>';
           });
           return html;
@@ -1773,6 +1773,12 @@ window.abrirModal = function(id) {
     const b = document.createElement("div");
     b.style.cssText = "color:var(--verde);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--verde-glow);border-radius:8px;border:1px solid rgba(63,185,80,0.3)";
     b.innerHTML = "✅ Herramientas retornadas" + (s.tieneIncidencias ? ' <span style="color:var(--rojo);margin-left:8px">⚠️ con incidencias</span>' : "");
+    acciones.appendChild(b);
+  }
+  if (s.estado === "cancelada") {
+    const b = document.createElement("div");
+    b.style.cssText = "color:var(--rojo);font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(248,81,73,0.1);border-radius:8px;border:1px solid rgba(248,81,73,0.25)";
+    b.innerHTML = "❌ Solicitud cancelada";
     acciones.appendChild(b);
   }
 
