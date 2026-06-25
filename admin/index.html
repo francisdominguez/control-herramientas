@@ -890,11 +890,7 @@
 
       <div class="nav-item nav-cerrar" id="btn-cerrar-sesion"><span class="nav-icono">🚪</span><span class="nav-texto">Cerrar Sesión</span></div>
 
-      <div class="sb-turno">
-        <div class="sb-turno-titulo">⏰ Turno actual</div>
-        <div class="sb-turno-hora">L–V 5:30 p.m. – 10:00 p.m.</div>
-        <div class="sb-turno-encargado">Encargado: <span style="color:var(--verde);font-weight:700">Taller</span></div>
-      </div>
+
     </div>
 
     <!-- CONTENIDO -->
@@ -913,112 +909,94 @@
           </div>
         </div>
 
-        <div class="kpi-grid">
+        <!-- KPI HOY -->
+        <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
           <div class="kpi-card amarillo" data-vista="solicitudes">
             <div class="kpi-icono">📋</div>
             <div>
-              <div class="kpi-top"><div class="kpi-label">Pendientes</div></div>
+              <div class="kpi-label">Pendientes hoy</div>
               <div class="kpi-numero" id="res-pendientes">—</div>
-              <div class="kpi-sub">solicitudes</div>
+              <div class="kpi-sub">sin entregar</div>
             </div>
           </div>
-          <div class="kpi-card" data-vista="prestadas">
-            <div class="kpi-icono">🔧</div>
+          <div class="kpi-card" data-vista="solicitudes">
+            <div class="kpi-icono">✅</div>
             <div>
-              <div class="kpi-top"><div class="kpi-label">Herramientas fuera</div></div>
+              <div class="kpi-label">Entregadas hoy</div>
               <div class="kpi-numero" id="res-prestadas">—</div>
-              <div class="kpi-sub">en préstamo</div>
+              <div class="kpi-sub">en el taller</div>
             </div>
           </div>
-          <div class="kpi-card amarillo" data-vista="devoluciones">
+          <div class="kpi-card" data-vista="solicitudes">
             <div class="kpi-icono">↩</div>
             <div>
-              <div class="kpi-top"><div class="kpi-label">Dev. pendientes</div></div>
+              <div class="kpi-label">Retornadas hoy</div>
               <div class="kpi-numero" id="res-hoy">—</div>
-              <div class="kpi-sub">por retornar</div>
+              <div class="kpi-sub">devueltas</div>
             </div>
           </div>
-          <div class="kpi-card" data-vista="prestamos-prof">
-            <div class="kpi-icono">👨‍🏫</div>
+          <div class="kpi-card rojo" style="cursor:pointer" onclick="verIncidencias()">
+            <div class="kpi-icono">⚠️</div>
             <div>
-              <div class="kpi-top"><div class="kpi-label">Préstamos prof.</div></div>
-              <div class="kpi-numero" id="dash-prof-activos">—</div>
-              <div class="kpi-sub">activos</div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icono">🔧</div>
-            <div>
-              <div class="kpi-top"><div class="kpi-label">Herramientas disp.</div></div>
-              <div class="kpi-numero">127</div>
-              <div class="kpi-sub">disponibles</div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icono">📦</div>
-            <div>
-              <div class="kpi-top"><div class="kpi-label">Material disp.</div></div>
-              <div class="kpi-numero" id="res-total">—</div>
-              <div class="kpi-sub">en inventario</div>
+              <div class="kpi-label">Incidencias</div>
+              <div class="kpi-numero" id="dash-incidencias">—</div>
+              <div class="kpi-sub">acumuladas</div>
             </div>
           </div>
         </div>
 
-        <div class="stats-row">
-          <div class="stat-mini">
-            <div class="stat-mini-icono" style="background:rgba(46,160,67,0.08)">🎓</div>
-            <div>
-              <div class="stat-mini-num" id="dash-entregadas-hoy">—</div>
-              <div class="stat-mini-label">Entregadas hoy</div>
-            </div>
-          </div>
-          <div class="stat-mini" style="cursor:pointer" onclick="verIncidencias()" title="Ver solicitudes con incidencias">
-            <div class="stat-mini-icono" style="background:rgba(248,81,73,0.08)">⚠️</div>
-            <div>
-              <div class="stat-mini-num" id="dash-incidencias">—</div>
-              <div class="stat-mini-label">Con incidencias</div>
-            </div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-icono" style="background:rgba(56,139,253,0.08)">👨‍🏫</div>
-            <div>
-              <div class="stat-mini-num" id="dash-prof-activos">—</div>
-              <div class="stat-mini-label">Préstamos prof. activos</div>
-            </div>
-          </div>
-        </div>
+        <!-- GRÁFICOS -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
 
-        <div class="dash-grid">
+          <!-- Herramientas más solicitadas -->
           <div class="dash-panel">
             <div class="dash-panel-header">
-              <h3>⏳ Solicitudes Pendientes</h3>
-              <span class="ver-link" data-vista="solicitudes">Ver todas →</span>
+              <h3>🔧 Herramientas más solicitadas</h3>
+              <span style="font-size:10px;color:var(--texto-dim)" id="grafico-her-periodo">histórico</span>
             </div>
-            <div id="dashboard-pendientes">
-              <div class="cargando"><div class="spinner"></div>Cargando...</div>
+            <div id="grafico-herramientas" style="padding:14px">
+              <div class="cargando"><div class="spinner"></div>Calculando...</div>
             </div>
           </div>
 
+          <!-- Solicitudes por laboratorio -->
           <div class="dash-panel">
             <div class="dash-panel-header">
-              <h3>⚡ Actividad Reciente</h3>
+              <h3>🏭 Solicitudes por laboratorio</h3>
+              <span style="font-size:10px;color:var(--texto-dim)">histórico</span>
             </div>
-            <div id="dashboard-movimientos">
-              <div class="cargando"><div class="spinner"></div>Cargando...</div>
+            <div id="grafico-laboratorios" style="padding:14px">
+              <div class="cargando"><div class="spinner"></div>Calculando...</div>
             </div>
           </div>
+
+          <!-- Solicitudes por hora del día -->
+          <div class="dash-panel">
+            <div class="dash-panel-header">
+              <h3>🕐 Solicitudes por hora del día</h3>
+              <span style="font-size:10px;color:var(--texto-dim)">histórico</span>
+            </div>
+            <div id="grafico-horas" style="padding:14px">
+              <div class="cargando"><div class="spinner"></div>Calculando...</div>
+            </div>
+          </div>
+
+          <!-- Solicitudes por profesor -->
+          <div class="dash-panel">
+            <div class="dash-panel-header">
+              <h3>👨‍🏫 Solicitudes por profesor</h3>
+              <span style="font-size:10px;color:var(--texto-dim)">histórico</span>
+            </div>
+            <div id="grafico-profesores" style="padding:14px">
+              <div class="cargando"><div class="spinner"></div>Calculando...</div>
+            </div>
+          </div>
+
         </div>
 
-        <div style="margin-top:14px;margin-bottom:8px;font-size:10px;font-weight:800;color:var(--texto-dim);text-transform:uppercase;letter-spacing:.08em">Acciones Rápidas</div>
+        <!-- ACCIONES RÁPIDAS -->
+        <div style="margin-top:4px;margin-bottom:8px;font-size:10px;font-weight:800;color:var(--texto-dim);text-transform:uppercase;letter-spacing:.08em">Acciones Rápidas</div>
         <div class="acciones-rapidas">
-          <div class="accion-rapida" onclick="navegarVista('solicitudes')">
-            <div class="accion-rapida-icon">➕</div>
-            <div class="accion-rapida-label">Nueva Solicitud</div>
-          </div>
-          <div class="accion-rapida" onclick="navegarVista('devoluciones')">
-            <div class="accion-rapida-icon">↩</div>
-            <div class="accion-rapida-label">Registrar Devolución</div>
-          </div>
           <div class="accion-rapida" onclick="navegarVista('inv-herramientas')">
             <div class="accion-rapida-icon">🗃️</div>
             <div class="accion-rapida-label">Inventario Herramientas</div>
@@ -1365,82 +1343,104 @@ function actualizarReloj() {
 actualizarReloj();
 setInterval(actualizarReloj, 30000);
 
+// ── UTILIDAD: barra horizontal ──
+function barraH(valor, max, color) {
+  const pct = max > 0 ? Math.round((valor / max) * 100) : 0;
+  return `<div style="flex:1;background:var(--borde);border-radius:4px;height:8px;overflow:hidden">
+    <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width .5s ease"></div>
+  </div>`;
+}
+
+function renderGraficoBarras(contenedorId, datos, color) {
+  const el = document.getElementById(contenedorId);
+  if (!el) return;
+  if (datos.length === 0) {
+    el.innerHTML = '<div class="vacio" style="padding:20px"><p>Sin datos aún.</p></div>';
+    return;
+  }
+  const max = datos[0].valor;
+  el.innerHTML = datos.slice(0, 8).map(d => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+      <div style="width:120px;font-size:11px;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${d.etiqueta}">${d.etiqueta}</div>
+      ${barraH(d.valor, max, color)}
+      <div style="width:26px;text-align:right;font-size:11px;font-weight:800;color:${color}">${d.valor}</div>
+    </div>
+  `).join("");
+}
+
+function renderGraficoHoras(datos) {
+  const el = document.getElementById("grafico-horas");
+  if (!el) return;
+  if (datos.every(d => d.valor === 0)) {
+    el.innerHTML = '<div class="vacio" style="padding:20px"><p>Sin datos aún.</p></div>';
+    return;
+  }
+  const max = Math.max(...datos.map(d => d.valor), 1);
+  const altMax = 56;
+  el.innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:2px;height:${altMax+28}px;padding-bottom:22px;position:relative">
+      ${datos.map(d => {
+        const h = max > 0 ? Math.round((d.valor / max) * altMax) : 0;
+        const col = d.valor > 0 ? "var(--verde)" : "var(--borde)";
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative">
+          <div style="font-size:9px;color:var(--verde);font-weight:800;height:14px;line-height:14px">${d.valor > 0 ? d.valor : ""}</div>
+          <div style="width:100%;height:${Math.max(h,2)}px;background:${col};border-radius:3px 3px 0 0"></div>
+          <div style="position:absolute;bottom:-18px;font-size:8px;color:var(--texto-dim)">${d.etiqueta}</div>
+        </div>`;
+      }).join("")}
+    </div>`;
+}
+
 async function cargarDashboard() {
   try {
-    const snapSol = await getDocs(collection(db, "solicitudes"));
-    const todas = snapSol.docs.map(d => ({ id: d.id, ...d.data() }));
+    const todas = todasSolicitudes.length > 0
+      ? todasSolicitudes
+      : (await getDocs(collection(db, "solicitudes"))).docs.map(d => ({ id: d.id, ...d.data() }));
 
     const hoy = new Date(); hoy.setHours(0,0,0,0);
-
-    const pendientes  = todas.filter(s => s.estado === "pendiente");
-    const entregadas  = todas.filter(s => s.estado === "entregada");
-    const incidencias = todas.filter(s => s.tieneIncidencias);
-
-    const devHoy = todas.filter(s => {
-      if (s.estado !== "retornada" || !s.retornadoEn) return false;
-      const d = s.retornadoEn.toDate ? s.retornadoEn.toDate() : new Date(s.retornadoEn);
+    const deHoy = todas.filter(s => {
+      const d = s.creadoEn?.toDate ? s.creadoEn.toDate() : new Date(s.creadoEn || 0);
       return d >= hoy;
     });
 
-    const entregadasHoy = todas.filter(s => {
-      if (!s.entregadoEn) return false;
-      const d = s.entregadoEn.toDate ? s.entregadoEn.toDate() : new Date(s.entregadoEn);
-      return d >= hoy;
+    // KPI solo de hoy
+    document.getElementById("res-pendientes").textContent  = deHoy.filter(s => s.estado === "pendiente").length;
+    document.getElementById("res-prestadas").textContent   = deHoy.filter(s => s.estado === "entregada").length;
+    document.getElementById("res-hoy").textContent         = deHoy.filter(s => s.estado === "retornada").length;
+    document.getElementById("badge-pendientes").textContent = deHoy.filter(s => s.estado === "pendiente").length;
+    const eInc = document.getElementById("dash-incidencias");
+    if (eInc) eInc.textContent = todas.filter(s => s.tieneIncidencias).length;
+
+    // Gráfico 1 — herramientas más solicitadas (histórico)
+    const conteoHer = {};
+    todas.forEach(s => (s.herramientas || []).forEach(h => {
+      conteoHer[h.nombre] = (conteoHer[h.nombre] || 0) + (h.cantidad || 1);
+    }));
+    renderGraficoBarras("grafico-herramientas",
+      Object.entries(conteoHer).map(([e,v])=>({etiqueta:e,valor:v})).sort((a,b)=>b.valor-a.valor),
+      "var(--verde)");
+
+    // Gráfico 2 — por laboratorio (histórico)
+    const conteoLab = {};
+    todas.forEach(s => { const l = s.laboratorio||"Sin lab"; conteoLab[l]=(conteoLab[l]||0)+1; });
+    renderGraficoBarras("grafico-laboratorios",
+      Object.entries(conteoLab).map(([e,v])=>({etiqueta:e,valor:v})).sort((a,b)=>b.valor-a.valor),
+      "var(--azul)");
+
+    // Gráfico 3 — por hora del día (histórico, rango 8–22)
+    const conteoHora = Array(24).fill(0);
+    todas.forEach(s => {
+      const d = s.creadoEn?.toDate ? s.creadoEn.toDate() : new Date(s.creadoEn||0);
+      if (d.getFullYear() > 2000) conteoHora[d.getHours()]++;
     });
+    renderGraficoHoras(Array.from({length:15},(_,i)=>({etiqueta:`${8+i}h`,valor:conteoHora[8+i]||0})));
 
-    document.getElementById("res-pendientes").textContent = pendientes.length;
-    document.getElementById("res-prestadas").textContent  = entregadas.length;
-    document.getElementById("res-hoy").textContent        = devHoy.length;
-    document.getElementById("res-total").textContent      = todas.length;
-    document.getElementById("badge-pendientes").textContent = pendientes.length;
-
-    const eHoy = document.getElementById("dash-entregadas-hoy");
-    const eInc  = document.getElementById("dash-incidencias");
-    if (eHoy)  eHoy.textContent  = entregadasHoy.length;
-    if (eInc)  eInc.textContent  = incidencias.length;
-
-    const wrap = document.getElementById("dashboard-pendientes");
-    if (pendientes.length === 0) {
-      wrap.innerHTML = '<div class="vacio"><div class="vacio-icono">🎉</div><p>¡Sin pendientes! Todo al día.</p></div>';
-    } else {
-      wrap.innerHTML = pendientes.slice(0, 6).map(s => `
-        <div class="fila-pend">
-          <div class="est-circulo" style="background:${colorEstudiante(s.nombre||"")}22;color:${colorEstudiante(s.nombre||"")};width:34px;height:34px;flex-shrink:0">
-            ${iniciales(s.nombre, s.apellido)}
-          </div>
-          <div class="fp-info">
-            <div class="fp-nombre">${s.nombre} ${s.apellido}</div>
-            <div class="fp-sub">${s.matricula} · ${s.laboratorio || "—"} · ${s.profesor || "—"}</div>
-          </div>
-          <span class="fp-her">${(s.herramientas||[]).length} items${(s.herramientas||[]).some(h=>h.adicional) ? ' <span style="background:var(--amarillo);color:#000;font-size:9px;font-weight:800;padding:1px 5px;border-radius:8px">+adic</span>' : ''}</span>
-          <button class="btn btn-verde" style="font-size:11px;padding:5px 10px" onclick="entregar('${s.id}')">✓ Entregar</button>
-        </div>
-      `).join("") + (pendientes.length > 6 ? `<div style="padding:10px 18px;font-size:12px;color:var(--texto-dim);text-align:center">+${pendientes.length - 6} más → <span class="ver-link" data-vista="solicitudes" style="cursor:pointer">ver todas</span></div>` : "");
-    }
-
-    const movWrap = document.getElementById("dashboard-movimientos");
-    const recientes = [...todas].sort((a,b) => {
-      const fa = a.creadoEn?.toDate?.() || new Date(0);
-      const fb = b.creadoEn?.toDate?.() || new Date(0);
-      return fb - fa;
-    }).slice(0, 8);
-
-    const accionTexto = { pendiente:"Solicitud creada", entregada:"Herramientas entregadas", retornada:"Herramientas retornadas", cancelada:"Solicitud cancelada", incidencia:"Retorno con incidencia" };
-
-    if (recientes.length === 0) {
-      movWrap.innerHTML = '<div class="vacio"><div class="vacio-icono">📭</div><p>Sin actividad aún.</p></div>';
-    } else {
-      movWrap.innerHTML = recientes.map(s => {
-        const ts = s.creadoEn?.toDate?.() || new Date(0);
-        const hora = ts.toLocaleTimeString("es-DO", { hour:"2-digit", minute:"2-digit" });
-        return `
-          <div class="feed-item">
-            <div class="feed-dot ${s.estado}"></div>
-            <div class="feed-texto"><strong>${s.nombre} ${s.apellido}</strong> · ${accionTexto[s.estado] || s.estado}</div>
-            <span class="feed-hora">${hora}</span>
-          </div>`;
-      }).join("");
-    }
+    // Gráfico 4 — por profesor (histórico)
+    const conteoProf = {};
+    todas.forEach(s => { const p = s.profesor||"Sin asignar"; conteoProf[p]=(conteoProf[p]||0)+1; });
+    renderGraficoBarras("grafico-profesores",
+      Object.entries(conteoProf).map(([e,v])=>({etiqueta:e,valor:v})).sort((a,b)=>b.valor-a.valor),
+      "var(--amarillo)");
 
   } catch(e) { console.error(e); }
 }
@@ -1551,14 +1551,7 @@ function renderTabla() {
               + '<td style="font-size:12px">' + (s.matricula||"—") + '</td>'
               + '<td style="font-size:12px">' + (s.profesor||"—") + '</td>'
               + '<td style="font-size:12px">' + (s.laboratorio||"—") + '</td>'
-              + '<td>' + (() => {
-                  const her = s.herramientas || [];
-                  const adicionales = her.filter(h => h.adicional).length;
-                  const badge = adicionales > 0
-                    ? ' <span title="' + adicionales + ' adicional(es)" style="background:var(--amarillo);color:#000;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:800">+' + adicionales + '</span>'
-                    : '';
-                  return '<span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + her.length + '</span>' + badge;
-                })() + '</td>'
+              + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + (s.herramientas||[]).length + '</span></td>'
               + '<td><span class="badge badge-' + s.estado + '">' + s.estado + '</span>' + inc + '</td>'
               + '<td><div class="acciones-celda"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + btnRetornada + btnCancelada + '</div></td>'
               + '</tr>';
@@ -1592,25 +1585,11 @@ window.abrirModal = function(id) {
   const s = todasSolicitudes.find(x => x.id === id);
   if (!s) return;
   
-  const originales = (s.herramientas || []).filter(h => !h.adicional);
-  const adicionales = (s.herramientas || []).filter(h => h.adicional);
-
-  const renderItems = (lista) => lista.map(h =>
-    `<div class="modal-herramienta-item"><span>${h.nombre}</span><span style="color:var(--verde);font-weight:700">x${h.cantidad}</span></div>`
-  ).join("");
-
-  let herramientas = renderItems(originales);
-  if (adicionales.length > 0) {
-    herramientas += `
-      <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px">
-        <div style="flex:1;height:1px;background:var(--borde)"></div>
-        <span style="font-size:10px;font-weight:800;color:var(--amarillo);white-space:nowrap">➕ ADICIONALES (${adicionales.length})</span>
-        <div style="flex:1;height:1px;background:var(--borde)"></div>
-      </div>
-      <div style="background:rgba(210,153,34,0.06);border-radius:6px;padding:2px 0">
-        ${renderItems(adicionales)}
-      </div>`;
-  }
+  const herramientas = (s.herramientas || []).map(h => {
+    const esAdicional = h.adicional === true;
+    const badge = esAdicional ? ' <span style="background:#f59e0b;color:#000;padding:1px 8px;border-radius:12px;font-size:9px;font-weight:700;margin-left:6px">➕ Adicional</span>' : '';
+    return `<div class="modal-herramienta-item"><span>${h.nombre}${badge}</span><span style="color:var(--verde);font-weight:700">x${h.cantidad}</span></div>`;
+  }).join("");
 
   document.getElementById("modal-contenido").innerHTML = `
     <div class="modal-campo"><label>Número de solicitud</label><div class="valor">${s.numeroSolicitud || s.id.slice(0,8)}</div></div>
@@ -1702,28 +1681,13 @@ window.entregar = async function(id) {
     `<strong>${s.nombre} ${s.apellido}</strong> · ${s.matricula} · ${s.laboratorio || ""}`;
 
   const lista = document.getElementById("lista-entrega");
-  const herOrig = (s.herramientas || []).filter(h => !h.adicional);
-  const herAdic = (s.herramientas || []).filter(h => h.adicional);
-
-  const renderFilas = (arr, offset = 0) => arr.map((h, i) => `
+  lista.innerHTML = (s.herramientas || []).map((h, i) => `
     <div class="fila-herramienta">
-      <input type="checkbox" id="chk-e-${offset + i}" data-idx="${offset + i}" checked>
+      <input type="checkbox" id="chk-e-${i}" data-idx="${i}" checked>
       <span class="h-nombre">${h.nombre}</span>
       <span class="h-cant">x${h.cantidad}</span>
     </div>
-  `).join("");
-
-  let listaHtml = renderFilas(herOrig);
-  if (herAdic.length > 0) {
-    listaHtml += `
-      <div style="display:flex;align-items:center;gap:8px;margin:8px 4px 4px">
-        <div style="flex:1;height:1px;background:var(--borde)"></div>
-        <span style="font-size:10px;font-weight:800;color:var(--amarillo);white-space:nowrap">➕ ADICIONALES</span>
-        <div style="flex:1;height:1px;background:var(--borde)"></div>
-      </div>
-    ` + renderFilas(herAdic, herOrig.length);
-  }
-  lista.innerHTML = listaHtml || "<div style='padding:12px;color:var(--texto-dim)'>Sin herramientas</div>";
+  `).join("") || "<div style='padding:12px;color:var(--texto-dim)'>Sin herramientas</div>";
 
   document.getElementById("lista-adicionales").innerHTML = "";
   document.getElementById("btn-toggle-entrega").textContent = "Desmarcar todas";
