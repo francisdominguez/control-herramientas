@@ -235,7 +235,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
   cantidadesModalExtra = {};
 
   const listaActual = (solicitud.herramientas || [])
-    .map(h => `<li>${h.nombre} × ${h.cantidad}</li>`)
+    .map(h => `<li style="color:#fff;">${h.nombre} × ${h.cantidad}</li>`)
     .join("");
 
   let gridHtml = "";
@@ -243,13 +243,13 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
     cantidadesModalExtra[h.codigo] = 0;
     const max = Number.isFinite(h.cantidadDisponible) ? h.cantidadDisponible : 5;
     gridHtml += `
-      <div class="tarjeta-herramienta" style="font-size:0.85rem">
-        <div class="nombre" style="font-size:0.8rem">${h.nombre}</div>
-        <div class="disponible">Disp. ${max}</div>
+      <div class="tarjeta-herramienta" style="font-size:0.85rem; color:#fff; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px;">
+        <div class="nombre" style="font-size:0.8rem; color:#fff;">${h.nombre}</div>
+        <div class="disponible" style="color:#aaa;">Disp. ${max}</div>
         <div class="contador">
-          <button type="button" data-mcodigo="${h.codigo}" data-maccion="restar">−</button>
-          <span id="mcant-${h.codigo}">0</span>
-          <button type="button" data-mcodigo="${h.codigo}" data-maccion="sumar" ${max === 0 ? "disabled" : ""}>+</button>
+          <button type="button" data-mcodigo="${h.codigo}" data-maccion="restar" style="background:#333; color:#fff; border:1px solid #555; border-radius:4px; padding:0 8px;">−</button>
+          <span id="mcant-${h.codigo}" style="color:#fff;">0</span>
+          <button type="button" data-mcodigo="${h.codigo}" data-maccion="sumar" style="background:#333; color:#fff; border:1px solid #555; border-radius:4px; padding:0 8px;" ${max === 0 ? "disabled" : ""}>+</button>
         </div>
       </div>
     `;
@@ -361,41 +361,62 @@ async function generarNumeroSolicitud() {
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!validarFormulario()) return;
 
-  btnEnviar.disabled = true;
-  btnEnviar.textContent = "Verificando...";
-
-  const matricula = document.getElementById("matricula").value.trim();
   const tipo = selectTipo.value;
+  const matricula = document.getElementById("matricula").value.trim();
 
-  try {
-    const solicitudActiva = await buscarSolicitudActivaHoy(matricula);
+  // Si es "adicional", solo validamos matrícula y buscamos
+  if (tipo === "adicional") {
+    // Validar formato de matrícula
+    const regexMatricula = /^\d-\d{2}-\d{4}$/;
+    if (!regexMatricula.test(matricula)) {
+      mostrarError("La matrícula debe tener el formato 0-00-0000 (ej. 1-19-0117).");
+      document.getElementById("matricula").classList.add("error-campo");
+      return;
+    }
+    document.getElementById("matricula").classList.remove("error-campo");
 
-    // Si seleccionó "Agregar herramientas adicionales"
-    if (tipo === "adicional") {
-      if (!solicitudActiva) {
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = "Buscando...";
+
+    try {
+      const solicitudActiva = await buscarSolicitudActivaHoy(matricula);
+      if (solicitudActiva) {
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = "Enviar Solicitud";
+        abrirModalDuplicado(solicitudActiva, herramientasDisponibles);
+        return;
+      } else {
         btnEnviar.disabled = false;
         btnEnviar.textContent = "Enviar Solicitud";
         mostrarError("No tienes una solicitud activa hoy. Selecciona 'Solicitando herramientas' para crear una nueva.");
         return;
       }
+    } catch (err) {
+      console.error(err);
       btnEnviar.disabled = false;
       btnEnviar.textContent = "Enviar Solicitud";
-      abrirModalDuplicado(solicitudActiva, herramientasDisponibles);
+      mostrarError("Error al verificar la matrícula. Intenta de nuevo.");
       return;
     }
+  }
 
-    // Si seleccionó "Solicitando herramientas"
+  // Si es "solicitando", validamos todo el formulario
+  if (!validarFormulario()) return;
+
+  btnEnviar.disabled = true;
+  btnEnviar.textContent = "Verificando...";
+
+  try {
+    const solicitudActiva = await buscarSolicitudActivaHoy(matricula);
     if (solicitudActiva) {
       btnEnviar.disabled = false;
       btnEnviar.textContent = "Enviar Solicitud";
-      // Preguntar si quiere agregar a la existente o crear una nueva
       if (confirm("Ya tienes una solicitud activa hoy. ¿Quieres agregar herramientas a esa solicitud?\n\nPresiona 'Aceptar' para agregar, o 'Cancelar' para crear una nueva solicitud.")) {
         abrirModalDuplicado(solicitudActiva, herramientasDisponibles);
         return;
       }
-      // Si cancela, continúa con la creación de una nueva solicitud
+      // Si cancela, continúa creando nueva
     }
   } catch (err) {
     console.error("Error al verificar matrícula:", err);
