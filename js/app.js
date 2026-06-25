@@ -100,6 +100,13 @@ btnBuscarAdicional.addEventListener("click", async () => {
       btnBuscarAdicional.textContent = "Buscar solicitud activa";
       return;
     }
+    // Verificar que la solicitud esté en estado válido
+    if (solicitud.estado === "retornada" || solicitud.estado === "cancelada") {
+      mostrarError(`Esta solicitud ya está ${solicitud.estado}. No se pueden agregar más herramientas.`);
+      btnBuscarAdicional.disabled = false;
+      btnBuscarAdicional.textContent = "Buscar solicitud activa";
+      return;
+    }
     abrirModalDuplicado(solicitud, herramientasDisponibles);
   } catch (err) {
     console.error("Error al buscar solicitud:", err);
@@ -282,6 +289,7 @@ async function buscarSolicitudActivaHoy(matricula) {
       const data = d.data();
       const creado = data.creadoEn?.toDate?.() || new Date(data.creadoEn);
       if (creado >= inicio && creado < fin) {
+        // Solo permitir si está pendiente o entregada
         if (data.estado === "pendiente" || data.estado === "entregada") {
           found = { id: d.id, ...data };
         }
@@ -294,7 +302,7 @@ async function buscarSolicitudActivaHoy(matricula) {
   }
 }
 
-// ---- MODAL DUPLICADO CORREGIDO ----
+// ---- Modal de solicitud duplicada ----
 function abrirModalDuplicado(solicitud, herramientasDisp) {
   solicitudExistenteId = solicitud.id;
   solicitudExistente = solicitud;
@@ -331,7 +339,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
   modal.innerHTML = `
     <div style="background:#0d1117;border:1px solid #30363d;border-radius:12px;padding:1.5rem;max-width:520px;width:100%;max-height:90vh;overflow-y:auto">
       <h2 style="margin:0 0 0.5rem;color:#f59e0b;font-size:1.2rem">⚠️ Ya tienes una solicitud activa hoy</h2>
-      <p style="margin:0 0 1rem;color:#7d8590;font-size:0.9rem">Solicitud #${solicitud.numeroSolicitud || solicitud.id}</p>
+      <p style="margin:0 0 1rem;color:#7d8590;font-size:0.9rem">Solicitud #${solicitud.numeroSolicitud || solicitud.id} · Estado: <span style="color:#3fb950;font-weight:700">${solicitud.estado}</span></p>
       <p style="margin:0 0 0.4rem;font-size:0.85rem;color:#7d8590">Herramientas ya solicitadas:</p>
       <ul style="margin:0 0 1rem;padding-left:1.2rem;color:#e6edf3;font-size:0.85rem">${listaActual}</ul>
       <p style="margin:0 0 0.6rem;font-size:0.9rem;color:#3fb950">Agregar más herramientas a esta solicitud:</p>
@@ -347,7 +355,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
 
   document.body.appendChild(modal);
 
-  // Evento para los contadores del modal
+  // ---- Eventos del grid del modal ----
   document.getElementById("modal-grid-herramientas").addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-mcodigo]");
     if (!btn) return;
@@ -365,13 +373,13 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
     document.getElementById(`mcant-${codigo}`).textContent = cant;
   });
 
-  // Cancelar
+  // ---- Botón Cancelar ----
   document.getElementById("btn-modal-cancelar").addEventListener("click", () => {
     modal.remove();
   });
 
-  // ---- BOTÓN AGREGAR HERRAMIENTAS (CORREGIDO) ----
-  document.getElementById("btn-modal-agregar").addEventListener("click", async function() {
+  // ---- Botón AGREGAR HERRAMIENTAS (CORREGIDO) ----
+  document.getElementById("btn-modal-agregar").addEventListener("click", async () => {
     const nuevas = Object.entries(cantidadesModalExtra)
       .filter(([_, c]) => c > 0)
       .map(([codigo, cantidad]) => {
@@ -384,27 +392,17 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
       return;
     }
 
-    const btnAgregar = this;
+    const btnAgregar = document.getElementById("btn-modal-agregar");
     btnAgregar.disabled = true;
     btnAgregar.textContent = "Guardando...";
 
     try {
-      // Obtener la solicitud actualizada desde Firestore para evitar conflictos
-      const snap = await getDocs(query(
-        collection(db, "solicitudes"),
-        where("__name__", "==", solicitudExistenteId)
-      ));
-      let datosActuales = null;
-      snap.forEach(d => { datosActuales = d.data(); });
-
-      if (!datosActuales) {
-        throw new Error("No se encontró la solicitud en Firestore.");
-      }
-
-      // Combinar herramientas existentes con las nuevas
-      const existentes = datosActuales.herramientas || [];
+      // Obtener herramientas existentes
+      const existentes = solicitudExistente.herramientas || [];
       const mapa = {};
       existentes.forEach(h => { mapa[h.codigo] = { ...h }; });
+      
+      // Sumar o agregar nuevas
       nuevas.forEach(h => {
         if (mapa[h.codigo]) {
           mapa[h.codigo].cantidad += h.cantidad;
@@ -423,6 +421,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
       textoNumeroSol.textContent = `Solicitud #${solicitudExistente.numeroSolicitud || solicitudExistenteId}`;
       textoDespedida.textContent = `Se agregaron ${nuevas.length} herramienta(s) a tu solicitud activa.`;
       mostrarPantalla(pantallaFinal);
+      
     } catch (err) {
       console.error("Error al agregar herramientas:", err);
       mostrarError("No se pudo actualizar la solicitud. Revisa tu conexión.");
@@ -450,6 +449,7 @@ form.addEventListener("submit", async (e) => {
   btnEnviar.disabled = true;
   btnEnviar.textContent = "Verificando...";
 
+  // Si es "adicional", ya se manejó con el botón Buscar
   if (selectTipo.value === "adicional") {
     btnEnviar.disabled = false;
     btnEnviar.textContent = "Enviar Solicitud";
@@ -473,6 +473,7 @@ form.addEventListener("submit", async (e) => {
     console.error("Error al verificar matrícula:", err);
   }
 
+  // Crear nueva solicitud
   const herramientasElegidas = Object.entries(cantidadesSeleccionadas)
     .filter(([_, c]) => c > 0)
     .map(([codigo, cantidad]) => {
