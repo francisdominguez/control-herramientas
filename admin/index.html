@@ -680,8 +680,9 @@
   ═══════════════════════════════════════════ */
   .badge {
     display: inline-flex; align-items: center;
-    padding: 3px 9px; border-radius: 20px;
-    font-size: 10px; font-weight: 700; letter-spacing: .02em;
+    padding: 2px 7px; border-radius: 20px;
+    font-size: 9px; font-weight: 700; letter-spacing: .02em;
+    white-space: nowrap;
   }
 
   .badge-pendiente  { background: rgba(210,153,34,0.15); color: var(--amarillo); border: 1px solid rgba(210,153,34,0.3); }
@@ -693,10 +694,11 @@
      BOTONES
   ═══════════════════════════════════════════ */
   .btn {
-    padding: 6px 12px; border-radius: 7px; border: none;
-    font-size: 11px; font-weight: 700; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 9px; border-radius: 6px; border: none;
+    font-size: 10px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 3px;
     transition: all .15s;
+    white-space: nowrap;
   }
 
   .btn-verde  { background: var(--verde); color: #000; }
@@ -825,6 +827,40 @@
   .fila-adicional input:focus { outline: none; border-color: var(--verde); }
   .fila-adicional .cant-adicional { width: 60px; }
   .btn-quitar-fila { background: none; border: none; color: var(--rojo); font-size: 16px; cursor: pointer; padding: 0 4px; }
+
+  /* ═══════════════════════════════════════════
+     Ajustes para columna acciones compacta
+  ═══════════════════════════════════════════ */
+  .acciones-celda {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+  .acciones-celda .btn {
+    font-size: 9px;
+    padding: 3px 7px;
+  }
+  .acciones-celda .badge-estado-accion {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-estado-accion.retornada {
+    background: var(--verde-glow);
+    color: var(--verde);
+    border: 1px solid rgba(63,185,80,0.3);
+  }
+  .badge-estado-accion.cancelada {
+    background: rgba(248,81,73,0.1);
+    color: var(--rojo);
+    border: 1px solid rgba(248,81,73,0.25);
+  }
 </style>
 </head>
 <body>
@@ -1686,8 +1722,8 @@ function renderTabla() {
             const inc = s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : '';
             const btnE = s.estado === "pendiente" ? '<button class="btn btn-verde" onclick="entregar(\'' + s.id + '\')">✓ Entregar</button>' : '';
             const btnR = s.estado === "entregada" ? '<button class="btn btn-verde" onclick="retornar(\'' + s.id + '\')">↩ Retornar</button>' : '';
-            const btnCancelada = s.estado === "cancelada" ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(248,81,73,0.1);color:var(--rojo);border:1px solid rgba(248,81,73,0.25)">❌ Cancelada</span>' : '';
-            const btnRetornada = s.estado === "retornada" ? '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:var(--verde-glow);color:var(--verde);border:1px solid rgba(63,185,80,0.3)">✅ Retornada</span>' : '';
+            const btnCancelada = s.estado === "cancelada" ? '<span class="badge-estado-accion cancelada">❌ Cancelada</span>' : '';
+            const btnRetornada = s.estado === "retornada" ? '<span class="badge-estado-accion retornada">✅ Retornada</span>' : '';
             html += '<tr>'
               + '<td style="color:var(--texto-dim)">' + (inicio+i+1) + '</td>'
               + '<td style="font-size:12px;color:var(--texto-dim)">' + formatFecha(s.creadoEn) + '</td>'
@@ -1697,7 +1733,7 @@ function renderTabla() {
               + '<td style="font-size:12px">' + (s.laboratorio||"—") + '</td>'
               + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + (s.herramientas||[]).length + '</span></td>'
               + '<td><span class="badge badge-' + s.estado + '">' + s.estado + '</span>' + inc + '</td>'
-              + '<td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + btnRetornada + btnCancelada + '</div></td>'
+              + '<td><div class="acciones-celda"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + btnRetornada + btnCancelada + '</div></td>'
               + '</tr>';
           });
           return html;
