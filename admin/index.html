@@ -1412,7 +1412,7 @@ async function cargarDashboard() {
             <div class="fp-nombre">${s.nombre} ${s.apellido}</div>
             <div class="fp-sub">${s.matricula} · ${s.laboratorio || "—"} · ${s.profesor || "—"}</div>
           </div>
-          <span class="fp-her">${(s.herramientas||[]).length} items</span>
+          <span class="fp-her">${(s.herramientas||[]).length} items${(s.herramientas||[]).some(h=>h.adicional) ? ' <span style="background:var(--amarillo);color:#000;font-size:9px;font-weight:800;padding:1px 5px;border-radius:8px">+adic</span>' : ''}</span>
           <button class="btn btn-verde" style="font-size:11px;padding:5px 10px" onclick="entregar('${s.id}')">✓ Entregar</button>
         </div>
       `).join("") + (pendientes.length > 6 ? `<div style="padding:10px 18px;font-size:12px;color:var(--texto-dim);text-align:center">+${pendientes.length - 6} más → <span class="ver-link" data-vista="solicitudes" style="cursor:pointer">ver todas</span></div>` : "");
@@ -1551,7 +1551,14 @@ function renderTabla() {
               + '<td style="font-size:12px">' + (s.matricula||"—") + '</td>'
               + '<td style="font-size:12px">' + (s.profesor||"—") + '</td>'
               + '<td style="font-size:12px">' + (s.laboratorio||"—") + '</td>'
-              + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + (s.herramientas||[]).length + '</span></td>'
+              + '<td>' + (() => {
+                  const her = s.herramientas || [];
+                  const adicionales = her.filter(h => h.adicional).length;
+                  const badge = adicionales > 0
+                    ? ' <span title="' + adicionales + ' adicional(es)" style="background:var(--amarillo);color:#000;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:800">+' + adicionales + '</span>'
+                    : '';
+                  return '<span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">' + her.length + '</span>' + badge;
+                })() + '</td>'
               + '<td><span class="badge badge-' + s.estado + '">' + s.estado + '</span>' + inc + '</td>'
               + '<td><div class="acciones-celda"><button class="btn btn-outline" onclick="abrirModal(\'' + s.id + '\')">👁 Ver</button>' + btnE + btnR + btnRetornada + btnCancelada + '</div></td>'
               + '</tr>';
@@ -1585,11 +1592,25 @@ window.abrirModal = function(id) {
   const s = todasSolicitudes.find(x => x.id === id);
   if (!s) return;
   
-  const herramientas = (s.herramientas || []).map(h => {
-    const esAdicional = h.adicional === true;
-    const badge = esAdicional ? ' <span style="background:#f59e0b;color:#000;padding:1px 8px;border-radius:12px;font-size:9px;font-weight:700;margin-left:6px">➕ Adicional</span>' : '';
-    return `<div class="modal-herramienta-item"><span>${h.nombre}${badge}</span><span style="color:var(--verde);font-weight:700">x${h.cantidad}</span></div>`;
-  }).join("");
+  const originales = (s.herramientas || []).filter(h => !h.adicional);
+  const adicionales = (s.herramientas || []).filter(h => h.adicional);
+
+  const renderItems = (lista) => lista.map(h =>
+    `<div class="modal-herramienta-item"><span>${h.nombre}</span><span style="color:var(--verde);font-weight:700">x${h.cantidad}</span></div>`
+  ).join("");
+
+  let herramientas = renderItems(originales);
+  if (adicionales.length > 0) {
+    herramientas += `
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px">
+        <div style="flex:1;height:1px;background:var(--borde)"></div>
+        <span style="font-size:10px;font-weight:800;color:var(--amarillo);white-space:nowrap">➕ ADICIONALES (${adicionales.length})</span>
+        <div style="flex:1;height:1px;background:var(--borde)"></div>
+      </div>
+      <div style="background:rgba(210,153,34,0.06);border-radius:6px;padding:2px 0">
+        ${renderItems(adicionales)}
+      </div>`;
+  }
 
   document.getElementById("modal-contenido").innerHTML = `
     <div class="modal-campo"><label>Número de solicitud</label><div class="valor">${s.numeroSolicitud || s.id.slice(0,8)}</div></div>
@@ -1681,13 +1702,28 @@ window.entregar = async function(id) {
     `<strong>${s.nombre} ${s.apellido}</strong> · ${s.matricula} · ${s.laboratorio || ""}`;
 
   const lista = document.getElementById("lista-entrega");
-  lista.innerHTML = (s.herramientas || []).map((h, i) => `
+  const herOrig = (s.herramientas || []).filter(h => !h.adicional);
+  const herAdic = (s.herramientas || []).filter(h => h.adicional);
+
+  const renderFilas = (arr, offset = 0) => arr.map((h, i) => `
     <div class="fila-herramienta">
-      <input type="checkbox" id="chk-e-${i}" data-idx="${i}" checked>
+      <input type="checkbox" id="chk-e-${offset + i}" data-idx="${offset + i}" checked>
       <span class="h-nombre">${h.nombre}</span>
       <span class="h-cant">x${h.cantidad}</span>
     </div>
-  `).join("") || "<div style='padding:12px;color:var(--texto-dim)'>Sin herramientas</div>";
+  `).join("");
+
+  let listaHtml = renderFilas(herOrig);
+  if (herAdic.length > 0) {
+    listaHtml += `
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 4px 4px">
+        <div style="flex:1;height:1px;background:var(--borde)"></div>
+        <span style="font-size:10px;font-weight:800;color:var(--amarillo);white-space:nowrap">➕ ADICIONALES</span>
+        <div style="flex:1;height:1px;background:var(--borde)"></div>
+      </div>
+    ` + renderFilas(herAdic, herOrig.length);
+  }
+  lista.innerHTML = listaHtml || "<div style='padding:12px;color:var(--texto-dim)'>Sin herramientas</div>";
 
   document.getElementById("lista-adicionales").innerHTML = "";
   document.getElementById("btn-toggle-entrega").textContent = "Desmarcar todas";
