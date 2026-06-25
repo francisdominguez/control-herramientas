@@ -36,7 +36,7 @@
     </div>
   </div>
 
-  <!-- ===== PANTALLA 3: FORMULARIO (SIN CAMPO "Usted está:") ===== -->
+  <!-- ===== PANTALLA 3: FORMULARIO ===== -->
   <div id="pantalla-formulario" class="pantalla oculto">
     <div class="contenedor">
 
@@ -47,7 +47,15 @@
 
       <form id="form-solicitud" class="tarjeta">
 
-        <!-- EL CAMPO "Usted está:" HA SIDO ELIMINADO -->
+        <div class="campo">
+          <label for="tipo-solicitud">Usted está:</label>
+          <div class="select-wrap">
+            <select id="tipo-solicitud">
+              <option value="solicitando">Solicitando herramientas</option>
+              <option value="adicional">Agregar herramientas adicionales</option>
+            </select>
+          </div>
+        </div>
 
         <div class="campo">
           <label for="nombre">Nombre(s):</label>
