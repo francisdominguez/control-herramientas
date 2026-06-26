@@ -2419,12 +2419,20 @@ let herCfgNombreLocal = null;
 async function cargarHerramientasCfg() {
   try {
     onSnapshot(query(collection(db, "herramientas"), orderBy("nombre", "asc")), snap => {
-      if (snap.empty) {
-        // Si Firestore está vacío, mostrar las del respaldo
-        renderHerramientasCfg(HERRAMIENTAS_LISTA.map((h, i) => ({ id: "local-" + i, nombre: h.nombre, cantidadDisponible: 5, local: true })));
-      } else {
-        renderHerramientasCfg(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      }
+      // Herramientas en Firestore
+      const enFirestore = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const nombresFirestore = new Set(enFirestore.map(h => h.nombre.toLowerCase()));
+
+      // Herramientas del respaldo que NO están en Firestore
+      const delRespaldo = HERRAMIENTAS_LISTA
+        .filter(h => !nombresFirestore.has(h.nombre.toLowerCase()))
+        .map((h, i) => ({ id: "local-" + i, nombre: h.nombre, cantidadDisponible: h.cantidadDisponible || 5, icono: h.icono, local: true }));
+
+      // Combinar: primero las de Firestore, luego las del respaldo restantes
+      const lista = [...enFirestore, ...delRespaldo]
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+      renderHerramientasCfg(lista);
     });
   } catch(e) {
     const w = document.getElementById("her-cfg-wrap");
