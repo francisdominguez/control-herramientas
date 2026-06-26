@@ -487,7 +487,7 @@ async function generarNumeroSolicitud() {
   }
 }
 
-form.addEventListener("submit", async (e) => {
+btnEnviar.addEventListener("click", async (e) => {
   e.preventDefault();
   if (!validarFormulario()) return;
 
