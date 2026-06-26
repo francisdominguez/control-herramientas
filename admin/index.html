@@ -1046,8 +1046,35 @@
 
       <!-- ── OTRAS VISTAS ── -->
       <div class="vista" id="vista-prestamos-prof">
-        <div class="pagina-titulo"><h2>Préstamos a Profesores</h2><p>Próximamente</p></div>
-        <div class="vacio"><div class="vacio-icono">🚧</div><p>Esta sección se construirá en la siguiente fase.</p></div>
+        <div class="pagina-titulo">
+          <h2>Préstamos a Profesores</h2>
+          <p>Registro directo de herramientas entregadas a profesores</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+          <div class="kpi-card"><div class="kpi-icono">👨‍🏫</div><div><div class="kpi-label">Total préstamos</div><div class="kpi-numero" id="pp-total">0</div></div></div>
+          <div class="kpi-card amarillo"><div class="kpi-icono">📦</div><div><div class="kpi-label">Activos</div><div class="kpi-numero" id="pp-activos">0</div></div></div>
+          <div class="kpi-card"><div class="kpi-icono">✅</div><div><div class="kpi-label">Retornados</div><div class="kpi-numero" id="pp-retornados">0</div></div></div>
+          <div class="kpi-card rojo"><div class="kpi-icono">⚠️</div><div><div class="kpi-label">Con incidencias</div><div class="kpi-numero" id="pp-incidencias">0</div></div></div>
+        </div>
+        <div style="margin-bottom:16px">
+          <button class="btn btn-verde" onclick="abrirModalNuevoPrestamoProf()" style="padding:10px 20px;font-size:13px">➕ Registrar préstamo a profesor</button>
+        </div>
+        <div class="seccion-tabla">
+          <div class="tabla-header">
+            <h3>Historial de préstamos</h3>
+            <div class="filtros">
+              <input type="text" id="pp-buscar" placeholder="Buscar profesor..." style="width:180px">
+              <select id="pp-filtro-estado">
+                <option value="">Todos los estados</option>
+                <option value="activo">Activo</option>
+                <option value="retornado">Retornado</option>
+              </select>
+            </div>
+          </div>
+          <div id="pp-tabla-wrap">
+            <div class="cargando"><div class="spinner"></div>Cargando préstamos...</div>
+          </div>
+        </div>
       </div>
 
       <div class="vista" id="vista-material-gastable">
@@ -1080,14 +1107,53 @@
         <div class="vacio"><div class="vacio-icono">🚧</div><p>Esta sección se construirá en la siguiente fase.</p></div>
       </div>
 
+      <!-- ── HISTORIAL ── -->
       <div class="vista" id="vista-historial">
-        <div class="pagina-titulo"><h2>Historial de Movimientos</h2><p>Próximamente</p></div>
-        <div class="vacio"><div class="vacio-icono">🚧</div><p>Esta sección se construirá en la siguiente fase.</p></div>
+        <div class="pagina-titulo">
+          <div>
+            <h2>Historial de Movimientos</h2>
+            <p>Registro completo de solicitudes y préstamos a profesores</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="hist-buscar" placeholder="Buscar nombre, matrícula..."
+              style="padding:7px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px;width:200px">
+            <select id="hist-tipo" style="padding:7px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+              <option value="">Todo</option>
+              <option value="solicitud">Solicitudes estudiantes</option>
+              <option value="profesor">Préstamos profesores</option>
+            </select>
+            <select id="hist-estado" style="padding:7px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="entregada">Entregada</option>
+              <option value="retornada">Retornada</option>
+              <option value="cancelada">Cancelada</option>
+              <option value="activo">Activo (prof.)</option>
+              <option value="retornado">Retornado (prof.)</option>
+            </select>
+          </div>
+        </div>
+        <div class="seccion-tabla">
+          <div id="hist-tabla-wrap">
+            <div class="cargando"><div class="spinner"></div>Cargando historial...</div>
+          </div>
+        </div>
       </div>
 
+      <!-- ── PROFESORES CFG ── -->
       <div class="vista" id="vista-profesores-cfg">
-        <div class="pagina-titulo"><h2>Profesores</h2><p>Próximamente</p></div>
-        <div class="vacio"><div class="vacio-icono">🚧</div><p>Esta sección se construirá en la siguiente fase.</p></div>
+        <div class="pagina-titulo">
+          <div>
+            <h2>Profesores</h2>
+            <p>Gestión de profesores registrados en el sistema</p>
+          </div>
+          <button class="btn btn-verde" onclick="abrirModalProfesor()" style="padding:9px 18px;font-size:13px">➕ Agregar profesor</button>
+        </div>
+        <div class="seccion-tabla">
+          <div id="prof-cfg-wrap">
+            <div class="cargando"><div class="spinner"></div>Cargando profesores...</div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /contenido -->
@@ -1152,6 +1218,72 @@
   </div>
 </div>
 
+<!-- ── MODAL: NUEVO PRÉSTAMO PROFESOR ── -->
+<div class="modal-overlay" id="modal-nuevo-pp">
+  <div class="modal" style="max-width:560px;overflow:visible">
+    <div class="modal-titulo">
+      ➕ Nuevo préstamo a profesor
+      <button class="modal-cerrar" onclick="cerrarModalNuevoProf()">✕</button>
+    </div>
+    <div class="modal-campo">
+      <label>Profesor</label>
+      <select id="pp-select-profesor" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+        <option value="">Selecciona un profesor</option>
+      </select>
+    </div>
+    <div class="modal-campo">
+      <label>Laboratorio / Taller</label>
+      <select id="pp-select-laboratorio" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+        <option value="">Selecciona un laboratorio</option>
+      </select>
+    </div>
+    <div class="modal-campo">
+      <label>Herramientas entregadas</label>
+      <div id="pp-lista-herramientas" style="background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:10px;overflow:visible"></div>
+      <button type="button" onclick="ppAgregarFila()" class="btn btn-outline" style="margin-top:8px;width:100%">+ Agregar herramienta</button>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalNuevoProf()">Cancelar</button>
+      <button class="btn btn-verde" id="pp-btn-confirmar" onclick="confirmarNuevoPrestamoProf()">✅ Registrar entrega</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: RETORNO PROFESOR ── -->
+<div class="modal-overlay" id="modal-retorno-pp">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-titulo">
+      ↩ Retorno — <span id="pp-retorno-nombre"></span>
+      <button class="modal-cerrar" onclick="cerrarModalRetornoProf()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--texto-dim);margin-bottom:14px">Marca el estado de cada herramienta al momento de la devolución.</p>
+    <div id="pp-retorno-lista"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalRetornoProf()">Cancelar</button>
+      <button class="btn btn-verde" onclick="confirmarRetornoProf()">✅ Confirmar retorno</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: AGREGAR / EDITAR PROFESOR ── -->
+<div class="modal-overlay" id="modal-profesor-cfg">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-titulo">
+      <span id="prof-modal-titulo">➕ Agregar profesor</span>
+      <button class="modal-cerrar" onclick="cerrarModalProfesor()">✕</button>
+    </div>
+    <div class="modal-campo">
+      <label>Nombre completo</label>
+      <input type="text" id="prof-input-nombre" placeholder="Ej: José Peña"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalProfesor()">Cancelar</button>
+      <button class="btn btn-verde" id="prof-btn-guardar" onclick="guardarProfesor()">✅ Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- ── FIREBASE ── -->
@@ -1169,6 +1301,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  deleteDoc,
   query,
   orderBy,
   where,
@@ -1244,6 +1377,8 @@ onAuthStateChanged(auth, user => {
     document.getElementById("admin-avatar").textContent = letra;
     cargarDashboard();
     cargarSolicitudes();
+    cargarPrestamosProf();
+    cargarProfesoresCfg();
   } else {
     document.getElementById("pantalla-login").style.display = "flex";
     document.getElementById("app").style.display = "none";
@@ -1449,6 +1584,8 @@ async function cargarSolicitudes() {
       cargarSelectores();
       renderTabla();
       cargarDashboard();
+      renderHistorial();
+      renderProfesoresCfg([]); // refresca conteo de vinculadas
     });
   } catch(e) { console.error(e); }
 }
@@ -1943,6 +2080,441 @@ window.anular = async function(id) {
     mostrarToast("Solicitud anulada");
   } catch(e) { mostrarToast("Error al anular", "rojo"); }
 };
+
+// ══════════════════════════════════════════════
+// ── PRÉSTAMOS A PROFESORES ──
+// ══════════════════════════════════════════════
+
+let todosPrestamosProf = [];
+let ppActivoId = null;
+
+const PROFESORES_PP = ["Daniel Camejo","José Peña","Julio Durán","Víctor Félix"];
+const LABORATORIOS_PP = [
+  "Taller mecánica básica","Lab. ciencia de los materiales","Máquinas especiales",
+  "Taller de procesos industriales","Taller de soldadura",
+  "Taller máquinas y herramientas I","Taller máquinas y herramientas II"
+];
+
+async function cargarPrestamosProf() {
+  try {
+    onSnapshot(query(collection(db, "prestamos_profesores"), orderBy("creadoEn", "desc")), snap => {
+      todosPrestamosProf = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      ppActualizarContadores();
+      ppRenderTabla();
+      renderHistorial();
+    });
+  } catch(e) {
+    const w = document.getElementById("pp-tabla-wrap");
+    if (w) w.innerHTML = '<div class="cargando">Error al cargar. Verifica la conexión.</div>';
+  }
+}
+
+function ppActualizarContadores() {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set("pp-total",       todosPrestamosProf.length);
+  set("pp-activos",     todosPrestamosProf.filter(p => p.estado === "activo").length);
+  set("pp-retornados",  todosPrestamosProf.filter(p => p.estado === "retornado").length);
+  set("pp-incidencias", todosPrestamosProf.filter(p => p.tieneIncidencias).length);
+}
+
+function ppFiltrados() {
+  const buscar = (document.getElementById("pp-buscar")?.value || "").toLowerCase();
+  const estado = document.getElementById("pp-filtro-estado")?.value || "";
+  return todosPrestamosProf.filter(p => {
+    const matchBuscar = !buscar || (p.profesor || "").toLowerCase().includes(buscar);
+    const matchEstado = !estado || p.estado === estado;
+    return matchBuscar && matchEstado;
+  });
+}
+
+function ppRenderTabla() {
+  const wrap = document.getElementById("pp-tabla-wrap");
+  if (!wrap) return;
+  const lista = ppFiltrados();
+  if (!lista.length) {
+    wrap.innerHTML = '<div class="vacio" style="padding:40px"><div class="vacio-icono">📭</div><p>No hay préstamos registrados.</p></div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Profesor</th><th>Laboratorio</th><th>Herramientas</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
+      </tr></thead>
+      <tbody>
+        ${lista.map(p => {
+          const fecha = p.creadoEn?.toDate ? p.creadoEn.toDate().toLocaleString("es-DO") : "—";
+          const c = colorEstudiante(p.profesor || "");
+          const ini = (p.profesor || "P")[0].toUpperCase();
+          const herr = (p.herramientas || []).map(h => `${h.nombre} ×${h.cantidad}`).join(", ") || "—";
+          const badge = p.estado === "activo"
+            ? '<span class="badge badge-entregada">Activo</span>'
+            : p.tieneIncidencias
+              ? '<span class="badge badge-cancelada">Con incidencias</span>'
+              : '<span class="badge badge-retornada">Retornado</span>';
+          const accion = p.estado === "activo"
+            ? `<button class="btn btn-verde" onclick="abrirRetornoProf('${p.id}')">↩ Retornar</button>`
+            : `<span style="font-size:12px;color:var(--texto-dim)">Cerrado</span>`;
+          return `<tr>
+            <td><div class="est-avatar"><div class="est-circulo" style="background:${c}22;color:${c}">${ini}</div><div class="est-nombre">${p.profesor || "—"}</div></div></td>
+            <td style="font-size:12px">${p.laboratorio || "—"}</td>
+            <td style="font-size:11px;color:var(--texto-dim);max-width:200px">${herr}</td>
+            <td style="font-size:12px;color:var(--texto-dim)">${fecha}</td>
+            <td>${badge}</td>
+            <td>${accion}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
+}
+
+["pp-buscar","pp-filtro-estado"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input",  ppRenderTabla);
+  document.getElementById(id)?.addEventListener("change", ppRenderTabla);
+});
+
+function ppPoblarSelects() {
+  const selProf = document.getElementById("pp-select-profesor");
+  const selLab  = document.getElementById("pp-select-laboratorio");
+  selProf.innerHTML = '<option value="">Selecciona un profesor</option>';
+  selLab.innerHTML  = '<option value="">Selecciona un laboratorio</option>';
+  LABORATORIOS_PP.forEach(l => {
+    const o = document.createElement("option"); o.value = o.textContent = l; selLab.appendChild(o);
+  });
+  getDocs(collection(db, "profesores")).then(snap => {
+    if (!snap.empty) {
+      selProf.innerHTML = '<option value="">Selecciona un profesor</option>';
+      snap.docs.forEach(d => {
+        const o = document.createElement("option");
+        o.value = o.textContent = d.data().nombre; selProf.appendChild(o);
+      });
+    } else {
+      PROFESORES_PP.forEach(p => {
+        const o = document.createElement("option"); o.value = o.textContent = p; selProf.appendChild(o);
+      });
+    }
+  }).catch(() => {
+    PROFESORES_PP.forEach(p => {
+      const o = document.createElement("option"); o.value = o.textContent = p; selProf.appendChild(o);
+    });
+  });
+}
+
+window.abrirModalNuevoPrestamoProf = function() {
+  ppPoblarSelects();
+  document.getElementById("pp-lista-herramientas").innerHTML = "";
+  ppAgregarFila();
+  document.getElementById("modal-nuevo-pp").classList.add("abierto");
+};
+
+window.cerrarModalNuevoProf = function() {
+  document.getElementById("modal-nuevo-pp").classList.remove("abierto");
+};
+
+window.ppAgregarFila = function() {
+  const contenedor = document.getElementById("pp-lista-herramientas");
+  const div = document.createElement("div");
+  div.dataset.filaHerramienta = "1";
+  div.style.cssText = "display:flex;gap:8px;align-items:center;margin-bottom:8px;position:relative";
+  div.innerHTML = `
+    <div style="flex:1;position:relative">
+      <input type="text" placeholder="Herramienta..." autocomplete="off"
+        style="width:100%;padding:8px 10px;background:var(--card2);border:1px solid var(--borde);border-radius:7px;color:var(--texto);font-size:13px"
+        oninput="ppFiltrarDropdown(this)" onfocus="ppFiltrarDropdown(this)" onblur="setTimeout(()=>this.parentNode.querySelector('.pp-drop').style.display='none',150)">
+      <div class="pp-drop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--card2);border:1px solid var(--borde);border-radius:7px;z-index:200;max-height:220px;overflow-y:auto;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"></div>
+    </div>
+    <input type="number" min="1" value="1" placeholder="Cant."
+      style="width:70px;padding:8px 10px;background:var(--card2);border:1px solid var(--borde);border-radius:7px;color:var(--texto);font-size:13px">
+    <button type="button" onclick="this.parentNode.remove()" style="background:rgba(248,81,73,0.1);color:var(--rojo);border:none;border-radius:7px;padding:6px 10px;cursor:pointer;font-size:14px">✕</button>`;
+  contenedor.appendChild(div);
+};
+
+window.ppFiltrarDropdown = function(input) {
+  const q    = input.value.toLowerCase();
+  const drop = input.parentNode.querySelector(".pp-drop");
+  const hits = HERRAMIENTAS_LISTA.filter(h => h.nombre.toLowerCase().includes(q)).slice(0, 8);
+  if (!hits.length || !q) { drop.style.display = "none"; return; }
+  drop.innerHTML = hits.map(h =>
+    `<div onmousedown="event.preventDefault();ppSeleccionarHerramienta(this,'${h.nombre}')"
+      style="padding:8px 12px;cursor:pointer;font-size:13px"
+      onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background=''">${h.nombre}</div>`
+  ).join("");
+  drop.style.display = "block";
+};
+
+window.ppSeleccionarHerramienta = function(item, nombre) {
+  const drop  = item.parentNode;
+  const input = drop.previousElementSibling;
+  input.value = nombre;
+  drop.style.display = "none";
+};
+
+window.confirmarNuevoPrestamoProf = async function() {
+  const profesor    = document.getElementById("pp-select-profesor").value.trim();
+  const laboratorio = document.getElementById("pp-select-laboratorio").value.trim();
+  if (!profesor)    { mostrarToast("Selecciona un profesor", "rojo"); return; }
+  if (!laboratorio) { mostrarToast("Selecciona un laboratorio", "rojo"); return; }
+  const filas = document.getElementById("pp-lista-herramientas").querySelectorAll("div[data-fila-herramienta]");
+  const herramientas = [];
+  for (const fila of filas) {
+    const inputs = fila.querySelectorAll("input");
+    const nombre   = inputs[0].value.trim();
+    const cantidad = parseInt(inputs[1].value) || 1;
+    if (nombre) herramientas.push({ nombre, cantidad });
+  }
+  if (!herramientas.length) { mostrarToast("Agrega al menos una herramienta", "rojo"); return; }
+  const btn = document.getElementById("pp-btn-confirmar");
+  btn.disabled = true; btn.textContent = "Guardando...";
+  try {
+    await addDoc(collection(db, "prestamos_profesores"), {
+      profesor, laboratorio, herramientas,
+      estado: "activo", tieneIncidencias: false,
+      creadoEn: serverTimestamp()
+    });
+    mostrarToast("✅ Préstamo registrado correctamente");
+    cerrarModalNuevoProf();
+  } catch(e) {
+    mostrarToast("Error al guardar. Verifica la conexión.", "rojo");
+  } finally {
+    btn.disabled = false; btn.textContent = "✅ Registrar entrega";
+  }
+};
+
+window.abrirRetornoProf = function(id) {
+  ppActivoId = id;
+  const p = todosPrestamosProf.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById("pp-retorno-nombre").textContent = p.profesor;
+  const lista = document.getElementById("pp-retorno-lista");
+  lista.innerHTML = (p.herramientas || []).map((h, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--borde)">
+      <span style="font-size:13px;font-weight:600">${h.nombre} <span style="color:var(--texto-dim);font-weight:400">×${h.cantidad}</span></span>
+      <select id="pp-estado-r-${i}" style="padding:6px 10px;background:var(--bg);border:1px solid var(--borde);border-radius:7px;color:var(--texto);font-size:12px">
+        <option value="retornada">✅ Retornada</option>
+        <option value="danada">⚠️ Dañada</option>
+        <option value="perdida">❌ Perdida</option>
+      </select>
+    </div>`).join("") || '<p style="color:var(--texto-dim);font-size:13px">Sin herramientas.</p>';
+  document.getElementById("modal-retorno-pp").classList.add("abierto");
+};
+
+window.cerrarModalRetornoProf = function() {
+  document.getElementById("modal-retorno-pp").classList.remove("abierto");
+  ppActivoId = null;
+};
+
+window.confirmarRetornoProf = async function() {
+  if (!ppActivoId) return;
+  const p = todosPrestamosProf.find(x => x.id === ppActivoId);
+  if (!p) return;
+  const herramientas = p.herramientas || [];
+  const resultado = [], incidencias = [];
+  herramientas.forEach((h, i) => {
+    const estado = document.getElementById(`pp-estado-r-${i}`)?.value || "retornada";
+    resultado.push({ ...h, estadoRetorno: estado });
+    if (estado !== "retornada") incidencias.push({ herramienta: h.nombre, tipo: estado });
+  });
+  try {
+    await updateDoc(doc(db, "prestamos_profesores", ppActivoId), {
+      estado: "retornado", tieneIncidencias: incidencias.length > 0,
+      retornadoEn: serverTimestamp(), herramientasRetorno: resultado
+    });
+    for (const inc of incidencias) {
+      await addDoc(collection(db, "incidencias"), {
+        tipo_prestamo: "profesor", nombre: p.profesor,
+        herramienta: inc.herramienta, tipoIncidencia: inc.tipo,
+        prestamoId: ppActivoId,
+        fecha: new Date().toLocaleDateString("es-DO"),
+        creadoEn: serverTimestamp()
+      });
+    }
+    cerrarModalRetornoProf();
+    mostrarToast(incidencias.length > 0
+      ? `↩ Retorno registrado · ${incidencias.length} incidencia(s)` : "↩ Retorno registrado correctamente",
+      incidencias.length > 0 ? "rojo" : "verde");
+  } catch(e) { mostrarToast("Error al registrar retorno", "rojo"); }
+};
+
+document.getElementById("modal-nuevo-pp").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-nuevo-pp")) cerrarModalNuevoProf();
+});
+document.getElementById("modal-retorno-pp").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-retorno-pp")) cerrarModalRetornoProf();
+});
+
+// ══════════════════════════════════════════════
+// ── PROFESORES — CONFIGURACIÓN ──
+// ══════════════════════════════════════════════
+
+let profCfgEditar = null;
+
+async function cargarProfesoresCfg() {
+  try {
+    onSnapshot(query(collection(db, "profesores"), orderBy("nombre", "asc")), snap => {
+      const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderProfesoresCfg(lista);
+    });
+  } catch(e) {
+    const w = document.getElementById("prof-cfg-wrap");
+    if (w) w.innerHTML = '<div class="cargando">Error al cargar profesores.</div>';
+  }
+}
+
+function renderProfesoresCfg(lista) {
+  const wrap = document.getElementById("prof-cfg-wrap");
+  if (!wrap) return;
+  if (!lista.length) {
+    wrap.innerHTML = '<div class="vacio"><div class="vacio-icono">👤</div><p>No hay profesores registrados. Agrega el primero.</p></div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Nombre</th><th>Solicitudes vinculadas</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${lista.map((p, i) => {
+          const vinculadas = todasSolicitudes.filter(s => s.profesor === p.nombre).length;
+          const c = colorEstudiante(p.nombre);
+          const ini = (p.nombre || "P")[0].toUpperCase();
+          return `<tr>
+            <td style="color:var(--texto-dim)">${i + 1}</td>
+            <td><div class="est-avatar">
+              <div class="est-circulo" style="background:${c}22;color:${c}">${ini}</div>
+              <div class="est-nombre">${p.nombre}</div>
+            </div></td>
+            <td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">${vinculadas}</span></td>
+            <td><div class="acciones-celda">
+              <button class="btn btn-outline" onclick="abrirModalProfesor('${p.id}','${p.nombre.replace(/'/g,"\\'")}')">✏️ Editar</button>
+              <button class="btn btn-rojo" onclick="eliminarProfesor('${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+            </div></td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
+}
+
+window.abrirModalProfesor = function(id = null, nombre = "") {
+  profCfgEditar = id;
+  document.getElementById("prof-modal-titulo").textContent = id ? "✏️ Editar profesor" : "➕ Agregar profesor";
+  document.getElementById("prof-input-nombre").value = nombre;
+  document.getElementById("modal-profesor-cfg").classList.add("abierto");
+};
+
+window.cerrarModalProfesor = function() {
+  document.getElementById("modal-profesor-cfg").classList.remove("abierto");
+  profCfgEditar = null;
+};
+
+window.guardarProfesor = async function() {
+  const nombre = document.getElementById("prof-input-nombre").value.trim();
+  if (!nombre) { mostrarToast("Escribe el nombre del profesor", "rojo"); return; }
+  const btn = document.getElementById("prof-btn-guardar");
+  btn.disabled = true; btn.textContent = "Guardando...";
+  try {
+    if (profCfgEditar) {
+      await updateDoc(doc(db, "profesores", profCfgEditar), { nombre });
+      mostrarToast("✅ Profesor actualizado");
+    } else {
+      await addDoc(collection(db, "profesores"), { nombre, creadoEn: serverTimestamp() });
+      mostrarToast("✅ Profesor agregado");
+    }
+    cerrarModalProfesor();
+  } catch(e) { mostrarToast("Error al guardar", "rojo"); }
+  finally { btn.disabled = false; btn.textContent = "✅ Guardar"; }
+};
+
+window.eliminarProfesor = async function(id, nombre) {
+  if (!confirm(`¿Eliminar al profesor "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  try {
+    await deleteDoc(doc(db, "profesores", id));
+    mostrarToast("Profesor eliminado");
+  } catch(e) { mostrarToast("Error al eliminar", "rojo"); }
+};
+
+document.getElementById("modal-profesor-cfg").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-profesor-cfg")) cerrarModalProfesor();
+});
+
+// ══════════════════════════════════════════════
+// ── HISTORIAL ──
+// ══════════════════════════════════════════════
+
+function renderHistorial() {
+  const wrap = document.getElementById("hist-tabla-wrap");
+  if (!wrap) return;
+  const buscar = (document.getElementById("hist-buscar")?.value || "").toLowerCase();
+  const tipo   = document.getElementById("hist-tipo")?.value || "";
+  const estado = document.getElementById("hist-estado")?.value || "";
+
+  const solicitudes = todasSolicitudes.map(s => ({
+    _tipo: "solicitud",
+    nombre: `${s.nombre || ""} ${s.apellido || ""}`.trim(),
+    sub: s.matricula || "—",
+    lab: s.laboratorio || "—",
+    herramientas: (s.herramientas || []).length,
+    estado: s.estado,
+    fecha: s.creadoEn
+  }));
+
+  const prestamos = todosPrestamosProf.map(p => ({
+    _tipo: "profesor",
+    nombre: p.profesor || "—",
+    sub: "Profesor",
+    lab: p.laboratorio || "—",
+    herramientas: (p.herramientas || []).length,
+    estado: p.estado,
+    fecha: p.creadoEn
+  }));
+
+  let items = [...solicitudes, ...prestamos].sort((a, b) => {
+    const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha || 0);
+    const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha || 0);
+    return fb - fa;
+  });
+
+  if (tipo)   items = items.filter(x => x._tipo === tipo);
+  if (estado) items = items.filter(x => x.estado === estado);
+  if (buscar) items = items.filter(x => x.nombre.toLowerCase().includes(buscar) || x.sub.toLowerCase().includes(buscar));
+
+  if (!items.length) {
+    wrap.innerHTML = '<div class="vacio"><div class="vacio-icono">📭</div><p>Sin registros que coincidan.</p></div>';
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Tipo</th><th>Nombre</th><th>Referencia</th><th>Taller / Lab</th>
+        <th>Herramientas</th><th>Estado</th><th>Fecha</th>
+      </tr></thead>
+      <tbody>
+        ${items.map(x => {
+          const c = colorEstudiante(x.nombre);
+          const ini = (x.nombre || "?")[0].toUpperCase();
+          const tipoBadge = x._tipo === "solicitud"
+            ? '<span class="badge badge-pendiente">Estudiante</span>'
+            : '<span class="badge badge-entregada">Profesor</span>';
+          const estadoBadge = `<span class="badge badge-${x.estado === 'activo' ? 'entregada' : x.estado === 'retornado' ? 'retornada' : x.estado}">${x.estado}</span>`;
+          const fecha = x.fecha?.toDate ? x.fecha.toDate().toLocaleString("es-DO") : "—";
+          return `<tr>
+            <td>${tipoBadge}</td>
+            <td><div class="est-avatar">
+              <div class="est-circulo" style="background:${c}22;color:${c}">${ini}</div>
+              <div><div class="est-nombre">${x.nombre}</div><div class="est-matricula">${x.sub}</div></div>
+            </div></td>
+            <td style="font-size:12px;color:var(--texto-dim)">${x.sub}</td>
+            <td style="font-size:12px">${x.lab}</td>
+            <td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">${x.herramientas}</span></td>
+            <td>${estadoBadge}</td>
+            <td style="font-size:12px;color:var(--texto-dim)">${fecha}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
+}
+
+["hist-buscar","hist-tipo","hist-estado"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input",  renderHistorial);
+  document.getElementById(id)?.addEventListener("change", renderHistorial);
+});
 
 // ── TEMA ──
 function aplicarTema(tema) {
