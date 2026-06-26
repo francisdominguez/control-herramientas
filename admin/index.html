@@ -1218,6 +1218,20 @@
   </div>
 </div>
 
+<!-- ── MODAL: DETALLE HISTORIAL ── -->
+<div class="modal-overlay" id="modal-historial">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-titulo">
+      📋 Detalle del registro
+      <button class="modal-cerrar" onclick="cerrarModalHistorial()">✕</button>
+    </div>
+    <div id="hist-modal-contenido"></div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalHistorial()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: NUEVO PRÉSTAMO PROFESOR ── -->
 <div class="modal-overlay" id="modal-nuevo-pp">
   <div class="modal" style="max-width:560px;overflow:visible">
@@ -2098,7 +2112,11 @@ const LABORATORIOS_PP = [
 async function cargarPrestamosProf() {
   try {
     onSnapshot(query(collection(db, "prestamos_profesores"), orderBy("creadoEn", "desc")), snap => {
-      todosPrestamosProf = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      todosPrestamosProf = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => {
+        const f = p.creadoEn?.toDate ? p.creadoEn.toDate() : new Date(p.creadoEn || 0);
+        return f >= hoy;
+      });
       ppActualizarContadores();
       ppRenderTabla();
       renderHistorial();
@@ -2445,7 +2463,7 @@ function renderHistorial() {
   const estado = document.getElementById("hist-estado")?.value || "";
 
   const solicitudes = todasSolicitudes.map(s => ({
-    _tipo: "solicitud",
+    _tipo: "solicitud", _ref: s,
     nombre: `${s.nombre || ""} ${s.apellido || ""}`.trim(),
     sub: s.matricula || "—",
     lab: s.laboratorio || "—",
@@ -2455,7 +2473,7 @@ function renderHistorial() {
   }));
 
   const prestamos = todosPrestamosProf.map(p => ({
-    _tipo: "profesor",
+    _tipo: "profesor", _ref: p,
     nombre: p.profesor || "—",
     sub: "Profesor",
     lab: p.laboratorio || "—",
@@ -2479,14 +2497,17 @@ function renderHistorial() {
     return;
   }
 
+  // Guardar referencia global para el modal
+  window._histItems = items;
+
   wrap.innerHTML = `
     <table>
       <thead><tr>
-        <th>Tipo</th><th>Nombre</th><th>Referencia</th><th>Taller / Lab</th>
+        <th>Tipo</th><th>Nombre</th><th>Taller / Lab</th>
         <th>Herramientas</th><th>Estado</th><th>Fecha</th>
       </tr></thead>
       <tbody>
-        ${items.map(x => {
+        ${items.map((x, idx) => {
           const c = colorEstudiante(x.nombre);
           const ini = (x.nombre || "?")[0].toUpperCase();
           const tipoBadge = x._tipo === "solicitud"
@@ -2494,13 +2515,12 @@ function renderHistorial() {
             : '<span class="badge badge-entregada">Profesor</span>';
           const estadoBadge = `<span class="badge badge-${x.estado === 'activo' ? 'entregada' : x.estado === 'retornado' ? 'retornada' : x.estado}">${x.estado}</span>`;
           const fecha = x.fecha?.toDate ? x.fecha.toDate().toLocaleString("es-DO") : "—";
-          return `<tr>
+          return `<tr style="cursor:pointer" onclick="abrirModalHistorial(${idx})" title="Ver detalle">
             <td>${tipoBadge}</td>
             <td><div class="est-avatar">
               <div class="est-circulo" style="background:${c}22;color:${c}">${ini}</div>
               <div><div class="est-nombre">${x.nombre}</div><div class="est-matricula">${x.sub}</div></div>
             </div></td>
-            <td style="font-size:12px;color:var(--texto-dim)">${x.sub}</td>
             <td style="font-size:12px">${x.lab}</td>
             <td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">${x.herramientas}</span></td>
             <td>${estadoBadge}</td>
@@ -2514,6 +2534,85 @@ function renderHistorial() {
 ["hist-buscar","hist-tipo","hist-estado"].forEach(id => {
   document.getElementById(id)?.addEventListener("input",  renderHistorial);
   document.getElementById(id)?.addEventListener("change", renderHistorial);
+});
+
+// ── MODAL DETALLE HISTORIAL ──
+window.abrirModalHistorial = function(idx) {
+  const x = window._histItems?.[idx];
+  if (!x) return;
+  const r = x._ref;
+  const esProf = x._tipo === "profesor";
+  const fecha  = x.fecha?.toDate ? x.fecha.toDate().toLocaleString("es-DO") : "—";
+
+  // Herramientas — para estudiante usa herramientasEntregadas o herramientas; para prof usa herramientasRetorno o herramientas
+  const herrs = esProf
+    ? (r.herramientasRetorno || r.herramientas || [])
+    : (r.herramientasEntregadas || r.herramientas || []);
+
+  const renderHerr = h => {
+    const estadoH = h.estadoRetorno || h.estadoEntrega || null;
+    let color = "var(--texto-dim)";
+    let icono = "";
+    if (estadoH === "retornada")     { color = "var(--verde)";    icono = "✅ "; }
+    else if (estadoH === "entregada"){ color = "var(--azul)";     icono = "📦 "; }
+    else if (estadoH === "dañada" || estadoH === "danada") { color = "var(--amarillo)"; icono = "⚠️ "; }
+    else if (estadoH === "perdida")  { color = "var(--rojo)";     icono = "❌ "; }
+    else if (estadoH === "no_retornada") { color = "var(--rojo)"; icono = "⚠️ "; }
+    const adicBadge = h.adicional ? '<span style="background:rgba(210,153,34,0.15);color:var(--amarillo);font-size:9px;font-weight:800;padding:1px 7px;border-radius:12px;margin-left:6px">+adicional</span>' : '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--borde)">
+      <span style="font-size:13px">${icono}${h.nombre}${adicBadge}</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span style="color:var(--verde);font-weight:700;font-size:12px">×${h.cantidad || 1}</span>
+        ${estadoH ? `<span style="color:${color};font-size:11px;font-weight:700">${estadoH}</span>` : ""}
+      </span>
+    </div>`;
+  };
+
+  // Incidencias — solo para estudiantes (tieneIncidencias)
+  const incSection = (!esProf && r.tieneIncidencias)
+    ? `<div style="margin-top:14px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.2);border-radius:8px;padding:10px 14px">
+        <div style="font-size:11px;font-weight:800;color:var(--rojo);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">⚠️ Incidencias registradas</div>
+        ${(r.herramientasRetorno || []).filter(h => h.estadoRetorno && h.estadoRetorno !== "retornada")
+          .map(h => `<div style="font-size:12px;padding:3px 0;color:var(--rojo)">• ${h.nombre} — ${h.estadoRetorno}</div>`).join("") || "Ver incidencias en Firestore"}
+      </div>`
+    : (esProf && r.tieneIncidencias)
+      ? `<div style="margin-top:14px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.2);border-radius:8px;padding:10px 14px">
+          <div style="font-size:11px;font-weight:800;color:var(--rojo);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">⚠️ Incidencias registradas</div>
+          ${(r.herramientasRetorno || []).filter(h => h.estadoRetorno && h.estadoRetorno !== "retornada")
+            .map(h => `<div style="font-size:12px;padding:3px 0;color:var(--rojo)">• ${h.nombre} — ${h.estadoRetorno}</div>`).join("")}
+        </div>`
+      : "";
+
+  document.getElementById("hist-modal-contenido").innerHTML = `
+    <div class="grid-dos" style="margin-bottom:12px">
+      <div class="modal-campo"><label>${esProf ? "Profesor" : "Estudiante"}</label><div class="valor">${x.nombre}</div></div>
+      <div class="modal-campo"><label>${esProf ? "Tipo" : "Matrícula"}</label><div class="valor">${x.sub}</div></div>
+      <div class="modal-campo"><label>Laboratorio / Taller</label><div class="valor">${x.lab}</div></div>
+      <div class="modal-campo"><label>Fecha</label><div class="valor">${fecha}</div></div>
+      ${!esProf ? `<div class="modal-campo"><label>Ciclo</label><div class="valor">${r.ciclo || "—"}</div></div>` : ""}
+      ${!esProf ? `<div class="modal-campo"><label>Profesor</label><div class="valor">${r.profesor || "—"}</div></div>` : ""}
+    </div>
+    <div class="modal-campo">
+      <label>Estado</label>
+      <span class="badge badge-${x.estado === 'activo' ? 'entregada' : x.estado === 'retornado' ? 'retornada' : x.estado}">${x.estado}</span>
+    </div>
+    <div class="modal-campo" style="margin-top:12px">
+      <label>Herramientas (${herrs.length})</label>
+      <div class="modal-herramientas" style="margin-top:6px">
+        ${herrs.length ? herrs.map(renderHerr).join("") : '<div style="padding:10px;color:var(--texto-dim);font-size:13px">Sin herramientas registradas</div>'}
+      </div>
+    </div>
+    ${incSection}`;
+
+  document.getElementById("modal-historial").classList.add("abierto");
+};
+
+window.cerrarModalHistorial = function() {
+  document.getElementById("modal-historial").classList.remove("abierto");
+};
+
+document.getElementById("modal-historial").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-historial")) cerrarModalHistorial();
 });
 
 // ── TEMA ──
