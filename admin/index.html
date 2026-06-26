@@ -924,7 +924,7 @@
 
         <!-- KPI Cards — solo hoy -->
         <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
-          <div class="kpi-card amarillo" data-vista="solicitudes">
+          <div class="kpi-card amarillo" data-vista="solicitudes" data-estado="pendiente">
             <div class="kpi-icono">📋</div>
             <div>
               <div class="kpi-label">Pendientes hoy</div>
@@ -932,7 +932,7 @@
               <div class="kpi-sub">sin entregar</div>
             </div>
           </div>
-          <div class="kpi-card" data-vista="solicitudes">
+          <div class="kpi-card" data-vista="solicitudes" data-estado="entregada">
             <div class="kpi-icono">✅</div>
             <div>
               <div class="kpi-label">Entregadas hoy</div>
@@ -940,7 +940,7 @@
               <div class="kpi-sub">en el taller</div>
             </div>
           </div>
-          <div class="kpi-card" data-vista="solicitudes">
+          <div class="kpi-card" data-vista="solicitudes" data-estado="retornada">
             <div class="kpi-icono">↩</div>
             <div>
               <div class="kpi-label">Retornadas hoy</div>
@@ -1482,7 +1482,16 @@ function navegarVista(vista) {
 }
 
 document.querySelectorAll(".kpi-card[data-vista]").forEach(card => {
-  card.addEventListener("click", () => navegarVista(card.dataset.vista));
+  card.addEventListener("click", () => {
+    navegarVista(card.dataset.vista);
+    const estado = card.dataset.estado;
+    if (estado !== undefined) {
+      setTimeout(() => {
+        const tab = document.querySelector(`.tab-btn[data-tab-estado="${estado}"]`);
+        if (tab) tab.click();
+      }, 50);
+    }
+  });
 });
 
 // ── TABS SOLICITUDES ──
