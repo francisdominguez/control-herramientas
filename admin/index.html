@@ -34,25 +34,25 @@
      VARIABLES — TEMA CLARO
   ═══════════════════════════════════════════ */
   body.tema-claro {
-    --bg:        #f6f8fa;
+    --bg:        #f0f4f8;
     --sidebar:   #ffffff;
     --card:      #ffffff;
-    --card2:     #f0f7f0;
-    --verde:     #2e7d32;
-    --verde-dim: #1b5e20;
-    --verde-glow:rgba(46,125,50,0.1);
-    --amarillo:  #b45309;
-    --rojo:      #cf222e;
-    --azul:      #0969da;
-    --texto:     #1f2328;
-    --texto-dim: #636c76;
-    --borde:     #d0d7de;
-    --hover:     #eaf5ea;
-    --tb-bg:     #1b5e20;
+    --card2:     #f4f7fa;
+    --verde:     #1b6e3c;
+    --verde-dim: #155c31;
+    --verde-glow:rgba(27,110,60,0.1);
+    --amarillo:  #9a6308;
+    --rojo:      #b3261e;
+    --azul:      #0b5fad;
+    --texto:     #1a2026;
+    --texto-dim: #5b6572;
+    --borde:     #d8e0e8;
+    --hover:     #eef3f7;
+    --tb-bg:     #155c31;
     --tb-txt:    #ffffff;
-    --tb-sub:    rgba(255,255,255,0.65);
+    --tb-sub:    rgba(255,255,255,0.7);
     --av-bg:     #ffffff;
-    --av-txt:    #2e7d32;
+    --av-txt:    #155c31;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -948,8 +948,8 @@
           </div>
 
           <div class="dash-panel">
-            <div class="dash-panel-header"><h3>🏭 Por laboratorio</h3><span style="font-size:10px;color:var(--texto-dim)">histórico</span></div>
-            <div id="grafico-laboratorios" style="padding:14px"><div class="cargando"><div class="spinner"></div>Calculando...</div></div>
+            <div class="dash-panel-header"><h3>📊 Estados hoy</h3><span style="font-size:10px;color:var(--texto-dim)">solicitudes de hoy</span></div>
+            <div id="grafico-estados" style="padding:14px"><div class="cargando"><div class="spinner"></div>Calculando...</div></div>
           </div>
 
           <div class="dash-panel">
@@ -958,8 +958,8 @@
           </div>
 
           <div class="dash-panel">
-            <div class="dash-panel-header"><h3>👨‍🏫 Por profesor</h3><span style="font-size:10px;color:var(--texto-dim)">histórico</span></div>
-            <div id="grafico-profesores" style="padding:14px"><div class="cargando"><div class="spinner"></div>Calculando...</div></div>
+            <div class="dash-panel-header"><h3>📅 Últimos 7 días</h3><span style="font-size:10px;color:var(--texto-dim)">solicitudes por día</span></div>
+            <div id="grafico-semana" style="padding:14px"><div class="cargando"><div class="spinner"></div>Calculando...</div></div>
           </div>
 
         </div>
@@ -1142,6 +1142,7 @@
             <option value="">Tipo: Todos</option>
             <option value="estudiante">🎓 Estudiante</option>
             <option value="profesor">👨‍🏫 Profesor</option>
+            <option value="externo">🏢 Dep. Externo</option>
           </select>
           <select id="hist-estado" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
             <option value="">Estado: Todos</option>
@@ -1667,6 +1668,59 @@ function renderGraficoBarras(contenedorId, datos, color) {
     </div>`).join("");
 }
 
+function renderGraficoDonut(contenedorId, datos) {
+  const el = document.getElementById(contenedorId);
+  if (!el) return;
+  const total = datos.reduce((s,d) => s + d.valor, 0);
+  if (!total) { el.innerHTML = '<div class="vacio" style="padding:20px"><p>Sin datos aún.</p></div>'; return; }
+  const r = 42, cx = 50, cy = 50, circ = 2 * Math.PI * r;
+  let offset = 0;
+  const segmentos = datos.filter(d => d.valor > 0).map(d => {
+    const frac = d.valor / total;
+    const largo = frac * circ;
+    const dash = `${largo} ${circ - largo}`;
+    const dashoffset = -offset;
+    offset += largo;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}" stroke-width="14"
+      stroke-dasharray="${dash}" stroke-dashoffset="${dashoffset}" transform="rotate(-90 ${cx} ${cy})"></circle>`;
+  }).join("");
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px">
+      <svg viewBox="0 0 100 100" style="width:110px;height:110px;flex-shrink:0">
+        ${segmentos}
+        <text x="50" y="46" text-anchor="middle" font-size="20" font-weight="800" fill="var(--texto)">${total}</text>
+        <text x="50" y="62" text-anchor="middle" font-size="8" fill="var(--texto-dim)">hoy</text>
+      </svg>
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        ${datos.map(d => `
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px">
+            <span style="width:9px;height:9px;border-radius:50%;background:${d.color};flex-shrink:0"></span>
+            <span style="flex:1;color:var(--texto)">${d.etiqueta}</span>
+            <span style="font-weight:800;color:${d.color}">${d.valor}</span>
+          </div>`).join("")}
+      </div>
+    </div>`;
+}
+
+function renderGraficoSemana(datos) {
+  const el = document.getElementById("grafico-semana");
+  if (!el) return;
+  if (datos.every(d => d.valor === 0)) { el.innerHTML = '<div class="vacio" style="padding:20px"><p>Sin datos aún.</p></div>'; return; }
+  const max = Math.max(...datos.map(d => d.valor), 1);
+  const altMax = 56;
+  el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:6px;height:${altMax+28}px;padding-bottom:22px;position:relative">
+    ${datos.map(d => {
+      const h = Math.round((d.valor / max) * altMax);
+      const col = d.esHoy ? "var(--verde)" : (d.valor > 0 ? "var(--azul)" : "var(--borde)");
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative">
+        <div style="font-size:10px;color:${col};font-weight:800;height:14px;line-height:14px">${d.valor > 0 ? d.valor : ""}</div>
+        <div style="width:100%;height:${Math.max(h,2)}px;background:${col};border-radius:4px 4px 0 0"></div>
+        <div style="position:absolute;bottom:-18px;font-size:9px;font-weight:${d.esHoy?800:400};color:${d.esHoy?"var(--verde)":"var(--texto-dim)"}">${d.etiqueta}</div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
 function renderGraficoHoras(datos) {
   const el = document.getElementById("grafico-horas");
   if (!el) return;
@@ -1721,12 +1775,13 @@ async function cargarDashboard() {
       Object.entries(conteoHer).map(([e,v]) => ({etiqueta:e,valor:v})).sort((a,b) => b.valor-a.valor),
       "var(--verde)");
 
-    // Gráfico 2 — por laboratorio (histórico)
-    const conteoLab = {};
-    todas.forEach(s => { const l = s.laboratorio||"Sin lab"; conteoLab[l]=(conteoLab[l]||0)+1; });
-    renderGraficoBarras("grafico-laboratorios",
-      Object.entries(conteoLab).map(([e,v]) => ({etiqueta:e,valor:v})).sort((a,b) => b.valor-a.valor),
-      "var(--azul)");
+    // Gráfico 2 — estados de hoy (donut)
+    renderGraficoDonut("grafico-estados", [
+      { etiqueta: "Pendientes", valor: pendHoy, color: "var(--amarillo)" },
+      { etiqueta: "Entregadas", valor: entregHoy, color: "var(--verde)" },
+      { etiqueta: "Retornadas", valor: retHoy, color: "var(--azul)" },
+      { etiqueta: "Canceladas", valor: deHoy.filter(s => s.estado === "cancelada").length, color: "var(--rojo)" }
+    ]);
 
     // Gráfico 3 — por hora (histórico, 8h–22h)
     const conteoHora = Array(24).fill(0);
@@ -1736,12 +1791,18 @@ async function cargarDashboard() {
     });
     renderGraficoHoras(Array.from({length:15}, (_,i) => ({etiqueta:`${8+i}h`, valor:conteoHora[8+i]||0})));
 
-    // Gráfico 4 — por profesor (histórico)
-    const conteoProf = {};
-    todas.forEach(s => { const p = s.profesor||"Sin asignar"; conteoProf[p]=(conteoProf[p]||0)+1; });
-    renderGraficoBarras("grafico-profesores",
-      Object.entries(conteoProf).map(([e,v]) => ({etiqueta:e,valor:v})).sort((a,b) => b.valor-a.valor),
-      "var(--amarillo)");
+    // Gráfico 4 — actividad de los últimos 7 días
+    const dias7 = [];
+    const hoyRef = new Date(); hoyRef.setHours(0,0,0,0);
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(hoyRef); d.setDate(d.getDate() - i);
+      const cuenta = todas.filter(s => {
+        const fs = s.creadoEn?.toDate ? s.creadoEn.toDate() : new Date(s.creadoEn||0);
+        return fs.getFullYear() === d.getFullYear() && fs.getMonth() === d.getMonth() && fs.getDate() === d.getDate();
+      }).length;
+      dias7.push({ etiqueta: d.toLocaleDateString("es-DO",{weekday:"short"}).slice(0,3), valor: cuenta, esHoy: i === 0 });
+    }
+    renderGraficoSemana(dias7);
 
   } catch(e) { console.error(e); }
 }
@@ -3228,12 +3289,12 @@ function aplicarTema(tema) {
 }
 
 window.toggleTema = function() {
-  const actual = localStorage.getItem('tema-admin') || 'oscuro';
+  const actual = localStorage.getItem('tema-admin') || 'claro';
   aplicarTema(actual === 'oscuro' ? 'claro' : 'oscuro');
 };
 
 // Aplicar tema guardado al cargar
-aplicarTema(localStorage.getItem('tema-admin') || 'oscuro');
+aplicarTema(localStorage.getItem('tema-admin') || 'claro');
 
 // ── HISTORIAL DE MOVIMIENTOS ──
 let historialDatos = [];
@@ -3244,15 +3305,17 @@ let histCargado = false;
 async function cargarHistorial() {
   if (histCargado) return;
   try {
-    const [snapSol, snapProf] = await Promise.all([
+    const [snapSol, snapProf, snapExt] = await Promise.all([
       getDocs(query(collection(db, "solicitudes"), orderBy("creadoEn", "desc"))),
-      getDocs(query(collection(db, "prestamos_profesores"), orderBy("creadoEn", "desc")))
+      getDocs(query(collection(db, "prestamos_profesores"), orderBy("creadoEn", "desc"))),
+      getDocs(query(collection(db, "prestamos_externos"), orderBy("creadoEn", "desc")))
     ]);
 
     const solicitudes = snapSol.docs.map(d => ({ id: d.id, tipo: "estudiante", ...d.data() }));
     const profesores  = snapProf.docs.map(d => ({ id: d.id, tipo: "profesor",   ...d.data() }));
+    const externos    = snapExt.docs.map(d => ({ id: d.id, tipo: "externo",     ...d.data() }));
 
-    historialDatos = [...solicitudes, ...profesores].sort((a, b) => {
+    historialDatos = [...solicitudes, ...profesores, ...externos].sort((a, b) => {
       const fa = a.creadoEn?.toDate?.() || new Date(0);
       const fb = b.creadoEn?.toDate?.() || new Date(0);
       return fb - fa;
@@ -3274,7 +3337,7 @@ function histFiltrados() {
   const fecha   = document.getElementById("hist-fecha")?.value || "";
 
   return historialDatos.filter(r => {
-    const nombre = `${r.nombre||""} ${r.apellido||""} ${r.matricula||""} ${r.profesor||r.nombreProfesor||""}`.toLowerCase();
+    const nombre = `${r.nombre||""} ${r.apellido||""} ${r.matricula||""} ${r.profesor||r.nombreProfesor||""} ${r.departamento||""} ${r.responsable||""}`.toLowerCase();
     const textoOk  = !buscar || nombre.includes(buscar);
     const tipoOk   = !tipo   || r.tipo === tipo;
     const estadoOk = !estado || (estado === "incidencia" ? r.tieneIncidencias : r.estado === estado);
@@ -3335,8 +3398,8 @@ function histRenderTabla() {
     return;
   }
 
-  const tipoIcono  = { estudiante:"🎓", profesor:"👨‍🏫" };
-  const tipoLabel  = { estudiante:"Estudiante", profesor:"Profesor" };
+  const tipoIcono  = { estudiante:"🎓", profesor:"👨‍🏫", externo:"🏢" };
+  const tipoLabel  = { estudiante:"Estudiante", profesor:"Profesor", externo:"Dep. Externo" };
 
   wrap.innerHTML = `
     <table>
@@ -3352,26 +3415,29 @@ function histRenderTabla() {
         </tr>
       </thead>
       <tbody>
-        ${pagina.map((r, i) => `
+        ${pagina.map((r, i) => {
+          const nombreMostrar = r.tipo === "externo" ? (r.departamento || "—") : `${r.nombre||""} ${r.apellido||""}`;
+          const refMostrar    = r.tipo === "externo" ? (r.responsable || "—") : (r.matricula || r.numeroSolicitud || "—");
+          return `
           <tr style="cursor:pointer" onclick="abrirModalHist('${r.id}','${r.tipo}')">
             <td style="color:var(--texto-dim)">${inicio + i + 1}</td>
             <td style="font-size:12px;color:var(--texto-dim)">${formatFecha(r.creadoEn)}</td>
             <td><span style="font-size:13px">${tipoIcono[r.tipo]||"📋"}</span> <span style="font-size:11px;color:var(--texto-dim)">${tipoLabel[r.tipo]||r.tipo}</span></td>
             <td>
               <div class="est-avatar">
-                <div class="est-circulo" style="background:${colorEstudiante(r.nombre||"")}22;color:${colorEstudiante(r.nombre||"")}">
-                  ${iniciales(r.nombre, r.apellido)}
+                <div class="est-circulo" style="background:${colorEstudiante(nombreMostrar)}22;color:${colorEstudiante(nombreMostrar)}">
+                  ${r.tipo === "externo" ? (nombreMostrar[0]||"D").toUpperCase() : iniciales(r.nombre, r.apellido)}
                 </div>
-                <div class="est-nombre">${r.nombre||""} ${r.apellido||""}</div>
+                <div class="est-nombre">${nombreMostrar}</div>
               </div>
             </td>
-            <td style="font-size:12px">${r.matricula || r.numeroSolicitud || "—"}</td>
+            <td style="font-size:12px">${refMostrar}</td>
             <td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">${(r.herramientas||[]).length}</span></td>
             <td>
               <span class="badge badge-${r.estado}">${r.estado||"—"}</span>
               ${r.tieneIncidencias ? '<span class="badge badge-cancelada" style="margin-left:4px">⚠️</span>' : ""}
             </td>
-          </tr>`).join("")}
+          </tr>`;}).join("")}
       </tbody>
     </table>`;
 
@@ -3441,11 +3507,14 @@ window.abrirModalHist = function(id, tipo) {
     </div>` : "";
 
   document.getElementById("modal-hist-titulo").textContent =
-    tipo === "estudiante" ? "🎓 Solicitud de Estudiante" : "👨‍🏫 Préstamo a Profesor";
+    tipo === "estudiante" ? "🎓 Solicitud de Estudiante" :
+    tipo === "profesor"   ? "👨‍🏫 Préstamo a Profesor" : "🏢 Salida a Departamento Externo";
 
-  document.getElementById("modal-hist-contenido").innerHTML = `
-    <div class="modal-campo"><label>Número / Referencia</label>
-      <div class="valor">${r.numeroSolicitud || r.id.slice(0,10)}</div></div>
+  const datosPersona = tipo === "externo" ? `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="modal-campo"><label>Departamento</label><div class="valor">${r.departamento||"—"}</div></div>
+      <div class="modal-campo"><label>Responsable que retira</label><div class="valor">${r.responsable||"—"}</div></div>
+    </div>` : `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="modal-campo"><label>Nombre</label><div class="valor">${r.nombre||""} ${r.apellido||""}</div></div>
       <div class="modal-campo"><label>Matrícula</label><div class="valor">${r.matricula||"—"}</div></div>
@@ -3453,7 +3522,12 @@ window.abrirModalHist = function(id, tipo) {
       ${r.telefono ? `<div class="modal-campo"><label>Teléfono</label><div class="valor">${r.telefono}</div></div>` : ""}
       <div class="modal-campo"><label>Profesor</label><div class="valor">${r.profesor||r.nombreProfesor||"—"}</div></div>
       <div class="modal-campo"><label>Laboratorio / Taller</label><div class="valor">${r.laboratorio||r.taller||"—"}</div></div>
-    </div>
+    </div>`;
+
+  document.getElementById("modal-hist-contenido").innerHTML = `
+    <div class="modal-campo"><label>Número / Referencia</label>
+      <div class="valor">${r.numeroSolicitud || r.id.slice(0,10)}</div></div>
+    ${datosPersona}
     <div class="modal-campo"><label>Estado</label>
       <span class="badge badge-${r.estado}">${r.estado||"—"}</span>
       ${r.tieneIncidencias ? '<span class="badge badge-cancelada" style="margin-left:6px">⚠️ Con incidencias</span>' : ""}
