@@ -1,4 +1,4 @@
-// js/inventario.js
+// js/inventario.js 
 import { db, collection, getDocs } from "./firebase.js";
 
 const HERRAMIENTAS_RESPALDO = [
@@ -32,7 +32,7 @@ const HERRAMIENTAS_RESPALDO = [
   { codigo: "HER-028", nombre: "Marcador numérico", icono: "🔢", cantidadDisponible: 5 },
   { codigo: "HER-029", nombre: "Martillo", icono: "🔨", cantidadDisponible: 8 },
   { codigo: "HER-030", nombre: "Mazo de goma", icono: "🔨", cantidadDisponible: 5 },
-  { codigo: "HER-031", nombre: "Nacho de 1/2", icono: "🔧", cantidadDisponible: 5 },
+  { codigo: "HER-031", nombre: "Macho de 1/2", icono: "🔧", cantidadDisponible: 5 },
   { codigo: "HER-032", nombre: "Nivel magnético", icono: "📐", cantidadDisponible: 5 },
   { codigo: "HER-033", nombre: "Nivel 90", icono: "📐", cantidadDisponible: 5 },
   { codigo: "HER-034", nombre: "Pie de rey", icono: "📏", cantidadDisponible: 5 },
@@ -46,29 +46,28 @@ const HERRAMIENTAS_RESPALDO = [
 async function obtenerColeccionOTexto(nombreColeccion, listaRespaldo) {
   try {
     const snap = await getDocs(collection(db, nombreColeccion));
-    const respaldo = listaRespaldo.map(h => ({ ...h, imagen: `img/herramientas/${h.codigo}.jpg` }));
-    
-    if (snap.empty) return respaldo;
+    if (snap.empty) return listaRespaldo;
 
-    const datosFirestore = snap.docs.map(doc => ({ 
+    return snap.docs.map(doc => ({ 
       id: doc.id, 
-      imagen: `img/herramientas/${doc.data().codigo}.jpg`,
       ...doc.data() 
     }));
-
-    // Fusionamos: Firestore + lo que falte del respaldo
-    const listaFinal = [...datosFirestore];
-    respaldo.forEach(itemR => {
-      if (!listaFinal.find(itemF => itemF.codigo === itemR.codigo)) {
-        listaFinal.push(itemR);
-      }
-    });
-    return listaFinal;
   } catch (err) {
-    return listaRespaldo.map(h => ({ ...h, imagen: `img/herramientas/${h.codigo}.jpg` }));
+    console.error("Error al leer Firestore, usando respaldo:", err);
+    return listaRespaldo;
   }
 }
 
+// FUNCIONES PARA APP.JS
 export async function cargarHerramientas() {
-  return obtenerColeccionOTexto("herramientas", HERRAMIENTAS_RESPALDO);
+  const datos = await obtenerColeccionOTexto("herramientas", HERRAMIENTAS_RESPALDO);
+  return datos.map(h => ({ ...h, imagen: `img/herramientas/${h.codigo}.jpg` }));
+}
+
+export async function cargarTalleres() {
+  return obtenerColeccionOTexto("talleres", ["Taller Mecánica", "Taller Soldadura"]);
+}
+
+export async function cargarProfesores() {
+  return obtenerColeccionOTexto("profesores", ["Profesor 1"]);
 }
