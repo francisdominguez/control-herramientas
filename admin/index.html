@@ -833,11 +833,11 @@
 
     <div class="login-campo">
       <label>Correo electrónico</label>
-      <input type="email" id="login-email" placeholder="admin@taller.com">
+      <input type="email" id="login-email" placeholder="admin@taller.com" autocomplete="off">
     </div>
     <div class="login-campo">
       <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••">
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="new-password">
     </div>
     <button class="btn-login" id="btn-login">Iniciar sesión</button>
     <div class="login-error" id="login-error">Correo o contraseña incorrectos.</div>
@@ -892,6 +892,7 @@
       <div class="nav-grupo">Configuración</div>
       <div class="nav-item" data-vista="profesores-cfg"><span class="nav-icono">👤</span><span class="nav-texto">Profesores</span></div>
       <div class="nav-item" data-vista="herramientas-cfg"><span class="nav-icono">🔧</span><span class="nav-texto">Herramientas</span></div>
+      <div class="nav-item" data-vista="usuarios-cfg" id="nav-usuarios"><span class="nav-icono">🔐</span><span class="nav-texto">Usuarios</span></div>
 
       <div class="nav-item nav-cerrar" id="btn-cerrar-sesion"><span class="nav-icono">🚪</span><span class="nav-texto">Cerrar Sesión</span></div>
 
@@ -1202,6 +1203,24 @@
         </div>
       </div>
 
+      <div class="vista" id="vista-usuarios-cfg">
+        <div class="pagina-titulo">
+          <div><h2>Usuarios</h2><p>Crea cuentas de acceso y define qué puede ver cada una</p></div>
+          <button class="btn btn-verde" onclick="abrirModalUsuario()" style="padding:9px 18px;font-size:13px">➕ Agregar usuario</button>
+        </div>
+        <div class="seccion-tabla">
+          <div class="tabla-header">
+            <h3>Cuentas del sistema</h3>
+            <div class="filtros">
+              <input type="text" id="usr-buscar" placeholder="Buscar usuario...">
+            </div>
+          </div>
+          <div id="usr-cfg-wrap">
+            <div class="cargando"><div class="spinner"></div>Cargando usuarios...</div>
+          </div>
+        </div>
+      </div>
+
     </div></div></div><div class="modal-overlay" id="modal-profesor-cfg">
   <div class="modal" style="max-width:400px">
     <div class="modal-titulo">
@@ -1216,6 +1235,59 @@
     <div class="modal-acciones">
       <button class="btn btn-outline" onclick="cerrarModalProfesor()">Cancelar</button>
       <button class="btn btn-verde" id="prof-btn-guardar" onclick="guardarProfesor()">✅ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-usuario-cfg">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-titulo">
+      <span id="usr-modal-titulo">➕ Agregar usuario</span>
+      <button class="modal-cerrar" onclick="cerrarModalUsuario()">✕</button>
+    </div>
+    <div class="modal-campo">
+      <label>Nombre completo</label>
+      <input type="text" id="usr-input-nombre" placeholder="Ej. María Pérez"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+    </div>
+    <div class="modal-campo">
+      <label>Correo electrónico</label>
+      <input type="email" id="usr-input-email" placeholder="usuario@taller.com" autocomplete="off"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+    </div>
+    <div class="modal-campo">
+      <label>Contraseña</label>
+      <input type="password" id="usr-input-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+      <small style="color:var(--texto-dim);font-size:11px">Déjala en blanco al editar para no cambiarla.</small>
+    </div>
+    <div class="modal-campo">
+      <label>Rol</label>
+      <select id="usr-input-rol" onchange="usrToggleSecciones()"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+        <option value="administrador">👑 Administrador (acceso total)</option>
+        <option value="encargado">🔒 Encargado (acceso limitado)</option>
+      </select>
+    </div>
+    <div class="modal-campo" id="usr-secciones-wrap" style="display:none">
+      <label>Secciones permitidas</label>
+      <div style="background:var(--bg);border:1px solid var(--borde);border-radius:8px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="dashboard"> Dashboard</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="solicitudes"> Solicitudes</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="prestamos-prof"> Préstamos Profesores</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="prestadas"> Herramientas Prestadas</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="incidencias"> Incidencias</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="inv-herramientas"> Inventario Herramientas</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="inv-materiales"> Materiales Gastables</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="laboratorios"> Talleres</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="historial"> Historial</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="profesores-cfg"> Profesores (cfg)</label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;cursor:pointer"><input type="checkbox" class="usr-seccion-chk" value="herramientas-cfg"> Herramientas (cfg)</label>
+      </div>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalUsuario()">Cancelar</button>
+      <button class="btn btn-verde" id="usr-btn-guardar" onclick="guardarUsuario()">✅ Guardar</button>
     </div>
   </div>
 </div>
@@ -1421,6 +1493,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getAuth,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1429,6 +1502,7 @@ import {
   collection,
   getDocs,
   doc,
+  setDoc,
   updateDoc,
   query,
   orderBy,
@@ -1451,6 +1525,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// App secundaria: permite crear usuarios nuevos sin cerrar la sesión del admin actual
+const appSecundaria = initializeApp(firebaseConfig, "secundaria");
+const authSecundaria = getAuth(appSecundaria);
 
 // ── UTILIDADES ──
 const colores = ["#22c55e","#3b82f6","#f59e0b","#8b5cf6","#ef4444","#14b8a6","#f97316"];
@@ -1498,7 +1576,7 @@ document.getElementById("login-pass").addEventListener("keydown", e => {
 document.getElementById("btn-cerrar-sesion").addEventListener("click", () => signOut(auth));
 
 // ── AUTH STATE ──
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if (user) {
     document.getElementById("pantalla-login").style.display = "none";
     document.getElementById("app").style.display = "block";
@@ -1510,11 +1588,64 @@ onAuthStateChanged(auth, user => {
     cargarPrestamosExternos();
     cargarHerramientasCfg();
     cargarProfesoresCfg();
+    cargarUsuariosCfg();
+    await aplicarRolUsuario(user);
   } else {
     document.getElementById("pantalla-login").style.display = "flex";
     document.getElementById("app").style.display = "none";
+    document.getElementById("login-email").value = "";
+    document.getElementById("login-pass").value = "";
   }
 });
+
+// ── ROLES Y PERMISOS ──
+let rolActual = "administrador";
+let seccionesPermitidas = null; // null = todas (administrador)
+
+async function aplicarRolUsuario(user) {
+  try {
+    const snap = await getDocs(query(collection(db, "usuarios"), where("uid", "==", user.uid)));
+    if (snap.empty) {
+      // Sin registro en "usuarios" => se trata como administrador (cuenta original del taller)
+      rolActual = "administrador";
+      seccionesPermitidas = null;
+      mostrarSoloSecciones(null);
+      return;
+    }
+    const datos = snap.docs[0].data();
+    rolActual = datos.rol || "administrador";
+    seccionesPermitidas = rolActual === "encargado" ? (datos.secciones || []) : null;
+    mostrarSoloSecciones(seccionesPermitidas);
+  } catch(e) {
+    rolActual = "administrador";
+    seccionesPermitidas = null;
+    mostrarSoloSecciones(null);
+  }
+}
+
+function mostrarSoloSecciones(secciones) {
+  // null = administrador, ve todo
+  document.querySelectorAll(".nav-item[data-vista]").forEach(item => {
+    const vista = item.dataset.vista;
+    const permitido = !secciones || secciones.includes(vista);
+    item.style.display = permitido ? "" : "none";
+  });
+  const navInc = document.getElementById("nav-incidencias");
+  if (navInc) navInc.style.display = (!secciones || secciones.includes("incidencias")) ? "" : "none";
+  const grupoConfig = document.getElementById("nav-usuarios")?.closest(".nav-grupo");
+  // Solo administrador ve "Usuarios"
+  const navUsr = document.getElementById("nav-usuarios");
+  if (navUsr) navUsr.style.display = secciones ? "none" : "";
+
+  if (secciones) {
+    // Navegar a la primera sección permitida
+    const primera = secciones[0] || "dashboard";
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("activo"));
+    document.querySelectorAll(`.nav-item[data-vista="${primera}"]`).forEach(n => n.classList.add("activo"));
+    document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
+    document.getElementById(`vista-${primera}`)?.classList.add("activa");
+  }
+}
 
 // ── VER INCIDENCIAS DESDE DASHBOARD / MENÚ ──
 window.verIncidencias = function() {
@@ -1581,6 +1712,7 @@ document.getElementById("nav-incidencias").addEventListener("click", verIncidenc
 
 // ── KPI CARDS navegables ──
 function navegarVista(vista) {
+  if (seccionesPermitidas && !seccionesPermitidas.includes(vista)) return;
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("activo"));
   document.querySelectorAll(`.nav-item[data-vista="${vista}"]`).forEach(n => n.classList.add("activo"));
   document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
@@ -1626,6 +1758,7 @@ function actualizarTabs() {
 document.querySelectorAll("[data-vista]").forEach(el => {
   el.addEventListener("click", () => {
     const vista = el.dataset.vista;
+    if (seccionesPermitidas && !seccionesPermitidas.includes(vista)) return;
     document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("activo"));
     document.querySelectorAll(`.nav-item[data-vista="${vista}"]`).forEach(n => n.classList.add("activo"));
     document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
@@ -3274,6 +3407,137 @@ window.eliminarProfesor = async function(id, nombre) {
 document.getElementById("prof-buscar")?.addEventListener("input", renderProfesoresCfg);
 document.getElementById("modal-profesor-cfg")?.addEventListener("click", e => {
   if (e.target === document.getElementById("modal-profesor-cfg")) cerrarModalProfesor();
+});
+
+// ── USUARIOS Y ROLES ──
+let usrCfgLista = [];
+let usrCfgEditarId = null;
+
+async function cargarUsuariosCfg() {
+  try {
+    onSnapshot(query(collection(db, "usuarios"), orderBy("creadoEn", "desc")), snap => {
+      usrCfgLista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderUsuariosCfg();
+    });
+  } catch(e) {
+    const w = document.getElementById("usr-cfg-wrap");
+    if (w) w.innerHTML = '<div class="cargando">Error al cargar usuarios.</div>';
+  }
+}
+
+function renderUsuariosCfg() {
+  const wrap = document.getElementById("usr-cfg-wrap");
+  if (!wrap) return;
+  const buscar = (document.getElementById("usr-buscar")?.value || "").toLowerCase();
+  const lista = buscar
+    ? usrCfgLista.filter(u => (u.nombre||"").toLowerCase().includes(buscar) || (u.email||"").toLowerCase().includes(buscar))
+    : usrCfgLista;
+  if (!lista.length) {
+    wrap.innerHTML = '<div class="vacio"><div class="vacio-icono">🔐</div><p>No hay usuarios registrados todavía.</p></div>';
+    return;
+  }
+  const etiquetasSecciones = {
+    dashboard:"Dashboard", solicitudes:"Solicitudes", "prestamos-prof":"Préstamos Profesores",
+    prestadas:"Herr. Prestadas", incidencias:"Incidencias", "inv-herramientas":"Inv. Herramientas",
+    "inv-materiales":"Materiales", laboratorios:"Talleres", historial:"Historial",
+    "profesores-cfg":"Profesores", "herramientas-cfg":"Herramientas"
+  };
+  wrap.innerHTML = '<table><thead><tr><th>#</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Secciones</th><th>Acciones</th></tr></thead><tbody>'
+    + lista.map((u, i) => {
+        const rolBadge = u.rol === "administrador"
+          ? '<span class="badge badge-entregada">👑 Administrador</span>'
+          : '<span class="badge badge-retornada">🔒 Encargado</span>';
+        const secciones = u.rol === "administrador"
+          ? '<span style="color:var(--texto-dim);font-size:11px">Todas</span>'
+          : (u.secciones||[]).map(s => `<span style="background:var(--card2);padding:2px 7px;border-radius:20px;font-size:10px;margin:1px">${etiquetasSecciones[s]||s}</span>`).join(" ") || '<span style="color:var(--texto-dim);font-size:11px">Ninguna</span>';
+        return `<tr>
+          <td style="color:var(--texto-dim)">${i+1}</td>
+          <td><div class="est-nombre">${u.nombre || "—"}</div></td>
+          <td style="font-size:12px">${u.email || "—"}</td>
+          <td>${rolBadge}</td>
+          <td style="max-width:240px">${secciones}</td>
+          <td><button class="btn btn-outline" onclick="abrirModalUsuario('${u.id}')">✏️ Editar</button></td>
+        </tr>`;
+      }).join("")
+    + '</tbody></table>';
+}
+
+document.getElementById("usr-buscar")?.addEventListener("input", renderUsuariosCfg);
+
+window.usrToggleSecciones = function() {
+  const rol = document.getElementById("usr-input-rol").value;
+  document.getElementById("usr-secciones-wrap").style.display = rol === "encargado" ? "block" : "none";
+};
+
+window.abrirModalUsuario = function(id = null) {
+  usrCfgEditarId = id;
+  const u = id ? usrCfgLista.find(x => x.id === id) : null;
+  document.getElementById("usr-modal-titulo").textContent = id ? "✏️ Editar usuario" : "➕ Agregar usuario";
+  document.getElementById("usr-input-nombre").value = u?.nombre || "";
+  document.getElementById("usr-input-email").value = u?.email || "";
+  document.getElementById("usr-input-email").readOnly = !!id; // no se puede cambiar el correo al editar
+  document.getElementById("usr-input-email").style.opacity = id ? "0.6" : "1";
+  document.getElementById("usr-input-pass").value = "";
+  document.getElementById("usr-input-rol").value = u?.rol || "administrador";
+  usrToggleSecciones();
+  document.querySelectorAll(".usr-seccion-chk").forEach(chk => {
+    chk.checked = (u?.secciones || []).includes(chk.value);
+  });
+  document.getElementById("modal-usuario-cfg").classList.add("abierto");
+};
+
+window.cerrarModalUsuario = function() {
+  document.getElementById("modal-usuario-cfg").classList.remove("abierto");
+  usrCfgEditarId = null;
+};
+
+window.guardarUsuario = async function() {
+  const nombre = document.getElementById("usr-input-nombre").value.trim();
+  const email  = document.getElementById("usr-input-email").value.trim();
+  const pass   = document.getElementById("usr-input-pass").value;
+  const rol    = document.getElementById("usr-input-rol").value;
+  const secciones = rol === "encargado"
+    ? [...document.querySelectorAll(".usr-seccion-chk:checked")].map(c => c.value)
+    : [];
+
+  if (!nombre) { mostrarToast("Escribe el nombre", "rojo"); return; }
+  if (!email)  { mostrarToast("Escribe el correo", "rojo"); return; }
+  if (rol === "encargado" && !secciones.length) { mostrarToast("Selecciona al menos una sección", "rojo"); return; }
+
+  const btn = document.getElementById("usr-btn-guardar");
+  btn.disabled = true; btn.textContent = "Guardando...";
+
+  try {
+    if (usrCfgEditarId) {
+      // Editar usuario existente (no se crea cuenta nueva en Auth)
+      await updateDoc(doc(db, "usuarios", usrCfgEditarId), { nombre, rol, secciones });
+      mostrarToast("✅ Usuario actualizado");
+      cerrarModalUsuario();
+    } else {
+      // Crear cuenta nueva en Auth usando la app secundaria (no afecta tu sesión)
+      if (!pass || pass.length < 6) { mostrarToast("La contraseña debe tener al menos 6 caracteres", "rojo"); btn.disabled=false; btn.textContent="✅ Guardar"; return; }
+      const cred = await createUserWithEmailAndPassword(authSecundaria, email, pass);
+      const uid = cred.user.uid;
+      await signOut(authSecundaria); // cerrar la sesión de la app secundaria
+      await setDoc(doc(db, "usuarios", uid), {
+        uid, nombre, email, rol, secciones,
+        creadoEn: serverTimestamp()
+      });
+      mostrarToast("✅ Usuario creado correctamente");
+      cerrarModalUsuario();
+    }
+  } catch(e) {
+    const msg = e.code === "auth/email-already-in-use" ? "Ese correo ya está registrado"
+      : e.code === "auth/invalid-email" ? "Correo inválido"
+      : "Error al guardar el usuario";
+    mostrarToast(msg, "rojo");
+  } finally {
+    btn.disabled = false; btn.textContent = "✅ Guardar";
+  }
+};
+
+document.getElementById("modal-usuario-cfg")?.addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-usuario-cfg")) cerrarModalUsuario();
 });
 
 // ── TEMA ──
