@@ -1126,8 +1126,61 @@
       </div>
 
       <div class="vista" id="vista-historial">
-        <div class="pagina-titulo"><h2>Historial de Movimientos</h2><p>Próximamente</p></div>
-        <div class="vacio"><div class="vacio-icono">🚧</div><p>Esta sección se construirá en la siguiente fase.</p></div>
+        <div class="pagina-titulo">
+          <h2>📊 Historial de Movimientos</h2>
+          <p>Todas las solicitudes, préstamos a profesores y salidas a departamentos</p>
+        </div>
+
+        <!-- Filtros -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+          <div style="flex:1;min-width:200px;position:relative">
+            <input type="text" id="hist-buscar" placeholder="Buscar por nombre, matrícula..."
+              style="width:100%;padding:8px 12px 8px 34px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+            <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--texto-dim);font-size:14px">🔍</span>
+          </div>
+          <select id="hist-tipo" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+            <option value="">Tipo: Todos</option>
+            <option value="estudiante">🎓 Estudiante</option>
+            <option value="profesor">👨‍🏫 Profesor</option>
+          </select>
+          <select id="hist-estado" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+            <option value="">Estado: Todos</option>
+            <option value="pendiente">⏳ Pendiente</option>
+            <option value="entregada">✅ Entregada</option>
+            <option value="retornada">↩ Retornada</option>
+            <option value="cancelada">❌ Cancelada</option>
+            <option value="incidencia">⚠️ Con Incidencia</option>
+          </select>
+          <input type="date" id="hist-fecha" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+          <button id="hist-btn-limpiar" style="display:none;padding:7px 12px;background:rgba(239,68,68,.15);color:var(--rojo);border:1px solid var(--rojo);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">✕ Limpiar</button>
+        </div>
+
+        <!-- Tags activos -->
+        <div id="hist-tags-bar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:11px;color:var(--texto-dim);font-weight:600">Filtros:</span>
+          <div id="hist-tags" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+
+        <div class="seccion-tabla">
+          <div id="hist-tabla-wrap">
+            <div class="cargando"><div class="spinner"></div>Cargando historial...</div>
+          </div>
+          <div class="paginacion" id="hist-paginacion">
+            <span id="hist-pag-info"></span>
+            <div class="paginacion-btns" id="hist-pag-btns"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DETALLE HISTORIAL -->
+      <div class="modal-overlay" id="modal-hist">
+        <div class="modal" style="max-width:560px">
+          <div class="modal-titulo">
+            <span id="modal-hist-titulo">Detalle</span>
+            <button class="modal-cerrar" onclick="document.getElementById('modal-hist').classList.remove('abierto')">✕</button>
+          </div>
+          <div id="modal-hist-contenido"></div>
+        </div>
       </div>
 
       <div class="vista" id="vista-profesores-cfg">
@@ -3181,6 +3234,247 @@ window.toggleTema = function() {
 
 // Aplicar tema guardado al cargar
 aplicarTema(localStorage.getItem('tema-admin') || 'oscuro');
+
+// ── HISTORIAL DE MOVIMIENTOS ──
+let historialDatos = [];
+let histPagina = 1;
+const histPorPagina = 15;
+let histCargado = false;
+
+async function cargarHistorial() {
+  if (histCargado) return;
+  try {
+    const [snapSol, snapProf] = await Promise.all([
+      getDocs(query(collection(db, "solicitudes"), orderBy("creadoEn", "desc"))),
+      getDocs(query(collection(db, "prestamos_profesores"), orderBy("creadoEn", "desc")))
+    ]);
+
+    const solicitudes = snapSol.docs.map(d => ({ id: d.id, tipo: "estudiante", ...d.data() }));
+    const profesores  = snapProf.docs.map(d => ({ id: d.id, tipo: "profesor",   ...d.data() }));
+
+    historialDatos = [...solicitudes, ...profesores].sort((a, b) => {
+      const fa = a.creadoEn?.toDate?.() || new Date(0);
+      const fb = b.creadoEn?.toDate?.() || new Date(0);
+      return fb - fa;
+    });
+
+    histCargado = true;
+    histRenderTabla();
+  } catch(e) {
+    console.error(e);
+    document.getElementById("hist-tabla-wrap").innerHTML =
+      '<div class="vacio"><div class="vacio-icono">⚠️</div><p>Error al cargar el historial.</p></div>';
+  }
+}
+
+function histFiltrados() {
+  const buscar  = document.getElementById("hist-buscar")?.value.toLowerCase() || "";
+  const tipo    = document.getElementById("hist-tipo")?.value || "";
+  const estado  = document.getElementById("hist-estado")?.value || "";
+  const fecha   = document.getElementById("hist-fecha")?.value || "";
+
+  return historialDatos.filter(r => {
+    const nombre = `${r.nombre||""} ${r.apellido||""} ${r.matricula||""} ${r.profesor||r.nombreProfesor||""}`.toLowerCase();
+    const textoOk  = !buscar || nombre.includes(buscar);
+    const tipoOk   = !tipo   || r.tipo === tipo;
+    const estadoOk = !estado || (estado === "incidencia" ? r.tieneIncidencias : r.estado === estado);
+    let fechaOk = true;
+    if (fecha && r.creadoEn) {
+      const d = r.creadoEn.toDate ? r.creadoEn.toDate() : new Date(r.creadoEn);
+      fechaOk = d.toISOString().slice(0,10) === fecha;
+    }
+    return textoOk && tipoOk && estadoOk && fechaOk;
+  });
+}
+
+function histActualizarFiltrosUI() {
+  const buscar = document.getElementById("hist-buscar")?.value.trim() || "";
+  const tipo   = document.getElementById("hist-tipo")?.value || "";
+  const estado = document.getElementById("hist-estado")?.value || "";
+  const fecha  = document.getElementById("hist-fecha")?.value || "";
+  const hay    = buscar || tipo || estado || fecha;
+
+  const limpiar = document.getElementById("hist-btn-limpiar");
+  const bar     = document.getElementById("hist-tags-bar");
+  const tags    = document.getElementById("hist-tags");
+  if (limpiar) limpiar.style.display = hay ? "block" : "none";
+  if (bar)     bar.style.display     = hay ? "flex"  : "none";
+  if (!tags)   return;
+
+  tags.innerHTML = "";
+  const chip = (txt) => `<span style="background:rgba(34,197,94,.15);color:var(--verde);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${txt}</span>`;
+  if (buscar) tags.innerHTML += chip(`🔍 "${buscar}"`);
+  if (tipo)   tags.innerHTML += chip(tipo === "estudiante" ? "🎓 Estudiante" : "👨‍🏫 Profesor");
+  if (estado) {
+    const et = { pendiente:"⏳ Pendiente", entregada:"✅ Entregada", retornada:"↩ Retornada", cancelada:"❌ Cancelada", incidencia:"⚠️ Con Incidencia" };
+    tags.innerHTML += chip(et[estado] || estado);
+  }
+  if (fecha)  tags.innerHTML += chip(`📅 ${fecha}`);
+
+  // Resaltar campos activos
+  ["hist-buscar","hist-tipo","hist-estado","hist-fecha"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const activo = el.value.trim() !== "";
+    el.style.borderColor = activo ? "var(--verde)" : "";
+    el.style.background  = activo ? "rgba(34,197,94,.06)" : "";
+  });
+}
+
+function histRenderTabla() {
+  const filtrados = histFiltrados();
+  const total  = filtrados.length;
+  const inicio = (histPagina - 1) * histPorPagina;
+  const pagina = filtrados.slice(inicio, inicio + histPorPagina);
+  const wrap   = document.getElementById("hist-tabla-wrap");
+
+  if (pagina.length === 0) {
+    wrap.innerHTML = '<div class="vacio"><div class="vacio-icono">📭</div><p>No hay registros que coincidan.</p></div>';
+    document.getElementById("hist-pag-info").textContent = "";
+    document.getElementById("hist-pag-btns").innerHTML = "";
+    return;
+  }
+
+  const tipoIcono  = { estudiante:"🎓", profesor:"👨‍🏫" };
+  const tipoLabel  = { estudiante:"Estudiante", profesor:"Profesor" };
+
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Fecha y Hora</th>
+          <th>Tipo</th>
+          <th>Nombre</th>
+          <th>Matrícula / Ref.</th>
+          <th>Herramientas</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pagina.map((r, i) => `
+          <tr style="cursor:pointer" onclick="abrirModalHist('${r.id}','${r.tipo}')">
+            <td style="color:var(--texto-dim)">${inicio + i + 1}</td>
+            <td style="font-size:12px;color:var(--texto-dim)">${formatFecha(r.creadoEn)}</td>
+            <td><span style="font-size:13px">${tipoIcono[r.tipo]||"📋"}</span> <span style="font-size:11px;color:var(--texto-dim)">${tipoLabel[r.tipo]||r.tipo}</span></td>
+            <td>
+              <div class="est-avatar">
+                <div class="est-circulo" style="background:${colorEstudiante(r.nombre||"")}22;color:${colorEstudiante(r.nombre||"")}">
+                  ${iniciales(r.nombre, r.apellido)}
+                </div>
+                <div class="est-nombre">${r.nombre||""} ${r.apellido||""}</div>
+              </div>
+            </td>
+            <td style="font-size:12px">${r.matricula || r.numeroSolicitud || "—"}</td>
+            <td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">${(r.herramientas||[]).length}</span></td>
+            <td>
+              <span class="badge badge-${r.estado}">${r.estado||"—"}</span>
+              ${r.tieneIncidencias ? '<span class="badge badge-cancelada" style="margin-left:4px">⚠️</span>' : ""}
+            </td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
+
+  // Paginación
+  const totalPags = Math.ceil(total / histPorPagina);
+  const desde = inicio + 1;
+  const hasta = Math.min(inicio + histPorPagina, total);
+  document.getElementById("hist-pag-info").textContent = `Mostrando ${desde}–${hasta} de ${total} registro${total !== 1 ? "s" : ""}`;
+  const btns = document.getElementById("hist-pag-btns");
+  btns.innerHTML = "";
+  for (let p = 1; p <= totalPags; p++) {
+    const b = document.createElement("button");
+    b.textContent = p;
+    if (p === histPagina) b.classList.add("activo");
+    b.addEventListener("click", () => { histPagina = p; histRenderTabla(); });
+    btns.appendChild(b);
+  }
+}
+
+// Eventos filtros historial
+["hist-buscar","hist-tipo","hist-estado","hist-fecha"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input",  () => { histActualizarFiltrosUI(); histPagina = 1; histRenderTabla(); });
+  document.getElementById(id)?.addEventListener("change", () => { histActualizarFiltrosUI(); histPagina = 1; histRenderTabla(); });
+});
+
+document.getElementById("hist-btn-limpiar")?.addEventListener("click", () => {
+  ["hist-buscar","hist-tipo","hist-estado","hist-fecha"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ""; el.style.borderColor = ""; el.style.background = ""; }
+  });
+  histActualizarFiltrosUI();
+  histPagina = 1;
+  histRenderTabla();
+});
+
+// Cargar cuando navegas a historial
+document.querySelectorAll(".nav-item[data-vista='historial']").forEach(el => {
+  el.addEventListener("click", () => setTimeout(cargarHistorial, 50));
+});
+
+// Modal detalle historial
+window.abrirModalHist = function(id, tipo) {
+  const r = historialDatos.find(x => x.id === id && x.tipo === tipo);
+  if (!r) return;
+
+  const estadoIcono = { retornada:"✅", no_retornada:"❌", danada:"🔴", perdida:"⚠️", entregada:"✅" };
+  const estadoColor = { retornada:"var(--verde)", no_retornada:"var(--rojo)", danada:"var(--rojo)", perdida:"var(--naranja,#f97316)", entregada:"var(--verde)" };
+
+  const herramientasHtml = (r.herramientas||[]).map(h => `
+    <div class="modal-herramienta-item">
+      <span>${h.nombre}${h.adicional ? ' <span style="color:var(--verde);font-size:10px">(adicional)</span>' : ""}</span>
+      <span style="color:var(--verde);font-weight:700">x${h.cantidad}</span>
+    </div>`).join("") || "<p style='color:var(--texto-dim);font-size:13px'>Sin herramientas</p>";
+
+  const retornoHtml = r.herramientasRetorno ? `
+    <div class="modal-campo">
+      <label>Estado de retorno por herramienta</label>
+      <div class="modal-herramientas">
+        ${r.herramientasRetorno.map(h => `
+          <div class="modal-herramienta-item">
+            <span>${h.nombre}</span>
+            <span style="color:${estadoColor[h.estadoRetorno]||"var(--texto-dim)"};font-weight:700">
+              ${estadoIcono[h.estadoRetorno]||""} ${h.estadoRetorno||"—"}
+            </span>
+          </div>`).join("")}
+      </div>
+    </div>` : "";
+
+  document.getElementById("modal-hist-titulo").textContent =
+    tipo === "estudiante" ? "🎓 Solicitud de Estudiante" : "👨‍🏫 Préstamo a Profesor";
+
+  document.getElementById("modal-hist-contenido").innerHTML = `
+    <div class="modal-campo"><label>Número / Referencia</label>
+      <div class="valor">${r.numeroSolicitud || r.id.slice(0,10)}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="modal-campo"><label>Nombre</label><div class="valor">${r.nombre||""} ${r.apellido||""}</div></div>
+      <div class="modal-campo"><label>Matrícula</label><div class="valor">${r.matricula||"—"}</div></div>
+      ${r.ciclo    ? `<div class="modal-campo"><label>Ciclo</label><div class="valor">${r.ciclo}</div></div>` : ""}
+      ${r.telefono ? `<div class="modal-campo"><label>Teléfono</label><div class="valor">${r.telefono}</div></div>` : ""}
+      <div class="modal-campo"><label>Profesor</label><div class="valor">${r.profesor||r.nombreProfesor||"—"}</div></div>
+      <div class="modal-campo"><label>Laboratorio / Taller</label><div class="valor">${r.laboratorio||r.taller||"—"}</div></div>
+    </div>
+    <div class="modal-campo"><label>Estado</label>
+      <span class="badge badge-${r.estado}">${r.estado||"—"}</span>
+      ${r.tieneIncidencias ? '<span class="badge badge-cancelada" style="margin-left:6px">⚠️ Con incidencias</span>' : ""}
+    </div>
+    <div class="modal-campo"><label>Fecha de solicitud</label><div class="valor">${formatFecha(r.creadoEn)}</div></div>
+    ${r.entregadoEn  ? `<div class="modal-campo"><label>Fecha de entrega</label><div class="valor">${formatFecha(r.entregadoEn)}</div></div>` : ""}
+    ${r.retornadoEn  ? `<div class="modal-campo"><label>Fecha de retorno</label><div class="valor">${formatFecha(r.retornadoEn)}</div></div>` : ""}
+    <div class="modal-campo">
+      <label>Herramientas solicitadas</label>
+      <div class="modal-herramientas">${herramientasHtml}</div>
+    </div>
+    ${retornoHtml}
+  `;
+
+  document.getElementById("modal-hist").classList.add("abierto");
+};
+
+document.getElementById("modal-hist")?.addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-hist"))
+    document.getElementById("modal-hist").classList.remove("abierto");
+});
 </script>
 </body>
 </html>
