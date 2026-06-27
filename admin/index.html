@@ -977,10 +977,10 @@
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
           <div style="flex:1;min-width:200px;position:relative">
             <input type="text" id="filtro-buscar" placeholder="Buscar por nombre, matrícula o profesor..."
-              style="width:100%;padding:8px 12px 8px 34px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+              style="width:100%;padding:8px 12px 8px 34px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px;transition:border-color .2s,background .2s">
             <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--texto-dim);font-size:14px">🔍</span>
           </div>
-          <select id="filtro-estado" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+          <select id="filtro-estado" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px;transition:border-color .2s,background .2s">
             <option value="">Estado: Todos</option>
             <option value="pendiente">Pendiente</option>
             <option value="entregada">Entregada</option>
@@ -988,9 +988,16 @@
             <option value="cancelada">Cancelada</option>
             <option value="incidencia">⚠️ Con Incidencia</option>
           </select>
-          <select id="filtro-profesor" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px">
+          <select id="filtro-profesor" style="padding:8px 12px;background:var(--card);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:12px;transition:border-color .2s,background .2s">
             <option value="">Profesor: Todos</option>
           </select>
+        </div>
+
+        <!-- Tags de filtros activos -->
+        <div id="filtros-activos-bar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:11px;color:var(--texto-dim);font-weight:600">Filtros activos:</span>
+          <div id="filtros-tags" style="display:flex;gap:6px;flex-wrap:wrap;flex:1"></div>
+          <button id="btn-limpiar-filtros" style="padding:4px 10px;background:rgba(239,68,68,.15);color:var(--rojo);border:1px solid var(--rojo);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">✕ Limpiar filtros</button>
         </div>
 
         <div class="tabs-filtro">
@@ -1827,7 +1834,11 @@ function renderTabla() {
 
   // paginación
   const totalPags = Math.ceil(total / porPagina);
-  document.getElementById("pag-info").textContent = `Mostrando ${inicio+1}-${Math.min(inicio+porPagina, total)} de ${total}`;
+  const desde = inicio + 1;
+  const hasta = Math.min(inicio + porPagina, total);
+  document.getElementById("pag-info").textContent = total > 0
+    ? `Mostrando ${desde}–${hasta} de ${total} solicitud${total !== 1 ? "es" : ""}`
+    : "";
   const btns = document.getElementById("pag-btns");
   btns.innerHTML = "";
   for (let p = 1; p <= totalPags; p++) {
@@ -1839,27 +1850,74 @@ function renderTabla() {
   }
 }
 
-["filtro-buscar","filtro-profesor"].forEach(id => {
-  document.getElementById(id)?.addEventListener("input", () => { paginaActual = 1; renderTabla(); });
-  document.getElementById(id)?.addEventListener("change", () => { paginaActual = 1; renderTabla(); });
-});
+// ── FILTROS UI: resaltado, tags y limpiar ──
+function actualizarFiltrosUI() {
+  const buscar  = document.getElementById("filtro-buscar").value.trim();
+  const estado  = document.getElementById("filtro-estado").value;
+  const profesor = document.getElementById("filtro-profesor").value;
 
-// Sincronizar select-estado con tabs
-document.getElementById("filtro-estado")?.addEventListener("change", () => {
-  const val = document.getElementById("filtro-estado").value;
-  document.querySelectorAll(".tab-btn").forEach(b => {
-    b.classList.toggle("activo", b.dataset.tabEstado === val);
-  });
+  // Resaltar campos activos en verde
+  const estiloBorde = (activo) => activo
+    ? "border:1.5px solid var(--verde)!important;background:rgba(34,197,94,.06)!important"
+    : "";
+
+  const elBuscar  = document.getElementById("filtro-buscar");
+  const elEstado  = document.getElementById("filtro-estado");
+  const elProfesor = document.getElementById("filtro-profesor");
+
+  elBuscar.style.borderColor   = buscar   ? "var(--verde)" : "";
+  elBuscar.style.background    = buscar   ? "rgba(34,197,94,.06)" : "";
+  elEstado.style.borderColor   = estado   ? "var(--verde)" : "";
+  elEstado.style.background    = estado   ? "rgba(34,197,94,.06)" : "";
+  elProfesor.style.borderColor = profesor ? "var(--verde)" : "";
+  elProfesor.style.background  = profesor ? "rgba(34,197,94,.06)" : "";
+
+  // Tags de filtros activos
+  const bar  = document.getElementById("filtros-activos-bar");
+  const tags = document.getElementById("filtros-tags");
+  const hayFiltro = buscar || estado || profesor;
+
+  bar.style.display = hayFiltro ? "flex" : "none";
+  tags.innerHTML = "";
+
+  if (buscar) tags.innerHTML += `<span style="background:rgba(34,197,94,.15);color:var(--verde);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">🔍 "${buscar}"</span>`;
+  if (estado) {
+    const etiquetas = { pendiente:"⏳ Pendiente", entregada:"✅ Entregada", retornada:"↩ Retornada", cancelada:"❌ Cancelada", incidencia:"⚠️ Con Incidencia" };
+    tags.innerHTML += `<span style="background:rgba(34,197,94,.15);color:var(--verde);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${etiquetas[estado]||estado}</span>`;
+  }
+  if (profesor) tags.innerHTML += `<span style="background:rgba(34,197,94,.15);color:var(--verde);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">👤 ${profesor}</span>`;
+}
+
+document.getElementById("btn-limpiar-filtros")?.addEventListener("click", () => {
+  document.getElementById("filtro-buscar").value  = "";
+  document.getElementById("filtro-estado").value  = "";
+  document.getElementById("filtro-profesor").value = "";
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activo"));
+  document.querySelector(".tab-btn[data-tab-estado='']")?.classList.add("activo");
+  actualizarFiltrosUI();
   paginaActual = 1;
   renderTabla();
 });
 
-// Sincronizar tabs con select-estado
+["filtro-buscar","filtro-profesor"].forEach(id => {
+  document.getElementById(id)?.addEventListener("input", () => { actualizarFiltrosUI(); paginaActual = 1; renderTabla(); });
+  document.getElementById(id)?.addEventListener("change", () => { actualizarFiltrosUI(); paginaActual = 1; renderTabla(); });
+});
+
+document.getElementById("filtro-estado")?.addEventListener("change", () => {
+  const val = document.getElementById("filtro-estado").value;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("activo", b.dataset.tabEstado === val));
+  actualizarFiltrosUI();
+  paginaActual = 1;
+  renderTabla();
+});
+
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activo"));
     btn.classList.add("activo");
     document.getElementById("filtro-estado").value = btn.dataset.tabEstado;
+    actualizarFiltrosUI();
     paginaActual = 1;
     renderTabla();
   });
