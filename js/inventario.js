@@ -76,7 +76,7 @@ async function obtenerColeccionOTexto(nombreColeccion, listaRespaldo, campo = "n
   } catch (err) {
     console.warn(`No se pudo leer la colección "${nombreColeccion}" de Firestore, usando datos de respaldo.`, err);
   }
-  // Respaldo local si Firestore está vacío o falla
+  // Respaldo local
   return listaRespaldo.map((valor, i) =>
     typeof valor === "string" ? { id: `local-${i}`, [campo]: valor } : valor
   );
