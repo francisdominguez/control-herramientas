@@ -56,7 +56,7 @@ const HERRAMIENTAS_RESPALDO = [
   { codigo: "HER-028", nombre: "Marcador numérico", icono: "🔢", cantidadDisponible: 5 },
   { codigo: "HER-029", nombre: "Martillo",          icono: "🔨", cantidadDisponible: 8 },
   { codigo: "HER-030", nombre: "Mazo de goma",      icono: "🔨", cantidadDisponible: 5 },
-  { codigo: "HER-031", nombre: "Nacho de 1/2",      icono: "🔧", cantidadDisponible: 5 },
+  { codigo: "HER-031", nombre: "Macho de 1/2",      icono: "🔧", cantidadDisponible: 5 },
   { codigo: "HER-032", nombre: "Nivel magnético",   icono: "📐", cantidadDisponible: 5 },
   { codigo: "HER-033", nombre: "Nivel 90",          icono: "📐", cantidadDisponible: 5 },
   { codigo: "HER-034", nombre: "Pie de rey",        icono: "📏", cantidadDisponible: 5 },
@@ -76,7 +76,7 @@ async function obtenerColeccionOTexto(nombreColeccion, listaRespaldo, campo = "n
   } catch (err) {
     console.warn(`No se pudo leer la colección "${nombreColeccion}" de Firestore, usando datos de respaldo.`, err);
   }
-  // Respaldo local
+  // Respaldo local si Firestore está vacío o falla
   return listaRespaldo.map((valor, i) =>
     typeof valor === "string" ? { id: `local-${i}`, [campo]: valor } : valor
   );
