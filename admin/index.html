@@ -1523,6 +1523,8 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1588,6 +1590,8 @@ function mostrarToast(msg, tipo = "verde") {
 }
 
 // ── LOGIN ──
+let _lastLoginPass = ""; // guardada en memoria para reautenticar si es necesario
+
 document.getElementById("btn-login").addEventListener("click", async () => {
   const email = document.getElementById("login-email").value.trim();
   const pass = document.getElementById("login-pass").value;
@@ -1595,6 +1599,7 @@ document.getElementById("btn-login").addEventListener("click", async () => {
   err.style.display = "none";
   try {
     await signInWithEmailAndPassword(auth, email, pass);
+    _lastLoginPass = pass; // guardamos para posible reautenticación
   } catch (e) {
     err.style.display = "block";
   }
@@ -1673,12 +1678,20 @@ async function aplicarRolUsuario(user) {
         }
 
         try {
+          // Reautenticar con la contraseña temporal antes de cambiar
+          const credencial = EmailAuthProvider.credential(user.email, _lastLoginPass);
+          await reauthenticateWithCredential(user, credencial);
           await updatePassword(user, nueva);
           await updateDoc(doc(db, "usuarios", user.uid), { debeCambiarContrasena: false });
+          _lastLoginPass = nueva; // actualizar en memoria con la nueva contraseña
           document.getElementById("modal-cambiar-pass").classList.remove("abierto");
           mostrarToast("✅ Contraseña guardada correctamente");
         } catch(err) {
-          errEl.textContent = "Error al cambiar la contraseña. Intenta de nuevo.";
+          console.error(err);
+          const msg = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
+            ? "Error de autenticación. Cierra sesión y vuelve a entrar."
+            : "Error al cambiar la contraseña. Intenta de nuevo.";
+          errEl.textContent = msg;
           errEl.style.display = "block";
         }
       };
