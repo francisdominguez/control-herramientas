@@ -1683,15 +1683,12 @@ async function aplicarRolUsuario(user) {
           await reauthenticateWithCredential(user, credencial);
           await updatePassword(user, nueva);
           await updateDoc(doc(db, "usuarios", user.uid), { debeCambiarContrasena: false });
-          _lastLoginPass = nueva; // actualizar en memoria con la nueva contraseña
+          _lastLoginPass = nueva;
           document.getElementById("modal-cambiar-pass").classList.remove("abierto");
           mostrarToast("✅ Contraseña guardada correctamente");
         } catch(err) {
-          console.error(err);
-          const msg = err.code === "auth/wrong-password" || err.code === "auth/invalid-credential"
-            ? "Error de autenticación. Cierra sesión y vuelve a entrar."
-            : "Error al cambiar la contraseña. Intenta de nuevo.";
-          errEl.textContent = msg;
+          console.error("Error cambio contraseña:", err.code, err.message);
+          errEl.textContent = `Error: ${err.code || err.message}`;
           errEl.style.display = "block";
         }
       };
