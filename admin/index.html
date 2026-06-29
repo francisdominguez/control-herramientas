@@ -859,8 +859,8 @@
       <div class="topbar-admin">
         <div class="avatar" id="admin-avatar">A</div>
         <div>
-          <div style="font-size:13px;font-weight:600">Administrador</div>
-          <div style="font-size:11px;color:var(--topbar-sub)">Encargado del Taller</div>
+          <div style="font-size:13px;font-weight:600" id="topbar-admin-nombre">Administrador</div>
+          <div style="font-size:11px;color:var(--topbar-sub)" id="topbar-admin-rol">Encargado del Taller</div>
         </div>
       </div>
     </div>
@@ -1503,6 +1503,7 @@ import {
   getDocs,
   doc,
   setDoc,
+  getDoc,
   updateDoc,
   query,
   orderBy,
@@ -1604,19 +1605,24 @@ let seccionesPermitidas = null; // null = todas (administrador)
 
 async function aplicarRolUsuario(user) {
   try {
-    const snap = await getDocs(query(collection(db, "usuarios"), where("uid", "==", user.uid)));
-    if (snap.empty) {
+    const snap = await getDoc(doc(db, "usuarios", user.uid));
+    if (!snap.exists()) {
       // Sin registro en "usuarios" => se trata como administrador (cuenta original del taller)
       rolActual = "administrador";
       seccionesPermitidas = null;
       mostrarSoloSecciones(null);
+      document.getElementById("topbar-admin-nombre").textContent = "Administrador";
+      document.getElementById("topbar-admin-rol").textContent = "Encargado del Taller";
       return;
     }
-    const datos = snap.docs[0].data();
+    const datos = snap.data();
     rolActual = datos.rol || "administrador";
     seccionesPermitidas = rolActual === "encargado" ? (datos.secciones || []) : null;
     mostrarSoloSecciones(seccionesPermitidas);
+    document.getElementById("topbar-admin-nombre").textContent = datos.nombre || user.email;
+    document.getElementById("topbar-admin-rol").textContent = rolActual === "administrador" ? "Administrador" : "Encargado";
   } catch(e) {
+    console.error("Error al aplicar rol:", e);
     rolActual = "administrador";
     seccionesPermitidas = null;
     mostrarSoloSecciones(null);
