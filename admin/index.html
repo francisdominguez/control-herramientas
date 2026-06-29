@@ -1659,7 +1659,8 @@ async function aplicarRolUsuario(user) {
         document.getElementById("topbar-admin-rol").textContent = "Administrador";
       } else {
         // Sin registro y no es cuenta raíz => su acceso fue eliminado/revocado
-        mostrarToast("Tu cuenta no tiene acceso. Contacta al administrador.", "rojo");
+        mostrarToast("Sin acceso: no se encontró tu registro (uid: " + user.uid + ")", "rojo");
+        console.warn("UID sin registro en Firestore:", user.uid, user.email);
         await signOut(auth);
       }
       return;
@@ -1711,7 +1712,8 @@ async function aplicarRolUsuario(user) {
     document.getElementById("topbar-admin-nombre").textContent = datos.nombre || user.email;
     document.getElementById("topbar-admin-rol").textContent = rolActual === "administrador" ? "Administrador" : "Encargado";
   } catch(e) {
-    console.error("Error al aplicar rol:", e);
+    console.error("Error al aplicar rol:", e.code, e.message);
+    mostrarToast("Error al cargar tu perfil: " + (e.code || e.message), "rojo");
     if (ADMIN_RAIZ.includes((user.email || "").toLowerCase())) {
       // Nunca bloquear a la cuenta raíz por un error transitorio de lectura
       rolActual = "administrador";
