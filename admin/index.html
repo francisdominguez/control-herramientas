@@ -1239,6 +1239,27 @@
   </div>
 </div>
 
+<!-- MODAL CAMBIO OBLIGATORIO DE CONTRASEÑA -->
+<div class="modal-overlay" id="modal-cambiar-pass" style="z-index:999">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <h3 style="margin-bottom:6px">Debes crear tu contraseña</h3>
+    <p style="font-size:13px;color:var(--texto-dim);margin-bottom:20px">Es tu primera vez accediendo. Por seguridad, define tu propia contraseña antes de continuar.</p>
+    <div class="modal-campo" style="text-align:left">
+      <label>Nueva contraseña</label>
+      <input type="password" id="nueva-pass-input" placeholder="Mínimo 8 caracteres"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+    </div>
+    <div class="modal-campo" style="text-align:left">
+      <label>Confirmar contraseña</label>
+      <input type="password" id="nueva-pass-confirm" placeholder="Repite la contraseña"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+    </div>
+    <div id="nueva-pass-error" style="color:var(--rojo);font-size:12px;margin-bottom:8px;display:none"></div>
+    <button id="btn-confirmar-nueva-pass" class="btn btn-verde" style="width:100%;padding:12px;font-size:14px;margin-top:8px">Guardar contraseña</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-usuario-cfg">
   <div class="modal" style="max-width:460px">
     <div class="modal-titulo">
@@ -1251,12 +1272,21 @@
         style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
     </div>
     <div class="modal-campo">
-      <label>Correo electrónico</label>
-      <input type="email" id="usr-input-email" placeholder="usuario@taller.com" autocomplete="off"
-        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+      <label>Usuario</label>
+      <div style="display:flex;align-items:center;gap:0">
+        <input type="text" id="usr-input-email" placeholder="nombre.apellido" autocomplete="off"
+          style="flex:1;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px 0 0 8px;color:var(--texto);font-size:14px;border-right:none">
+        <span style="padding:10px 12px;background:var(--card2);border:1px solid var(--borde);border-radius:0 8px 8px 0;color:var(--texto-dim);font-size:14px;white-space:nowrap">@taller.com</span>
+      </div>
     </div>
     <div class="modal-campo" id="usr-pass-info" style="background:rgba(56,139,253,0.08);border:1px solid rgba(56,139,253,0.25);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--texto-dim)">
-      🔒 Al crear la cuenta se le enviará un correo a este usuario para que él mismo defina su contraseña. Tú nunca la verás ni la asignas.
+      🔒 El encargado iniciará con una contraseña temporal que tú le asignas. Al entrar por primera vez, el sistema le pedirá que la cambie.
+    </div>
+    <div class="modal-campo" id="usr-pass-temporal-wrap">
+      <label>Contraseña temporal <span style="color:var(--rojo)">*</span></label>
+      <input type="text" id="usr-input-pass-temp" placeholder="Ej. Taller2026"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+      <small style="color:var(--texto-dim);font-size:11px;margin-top:4px">Dásela al encargado. Él la cambiará en su primer acceso.</small>
     </div>
     <div class="modal-campo">
       <label>Rol</label>
@@ -1492,6 +1522,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  updatePassword,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1622,6 +1653,37 @@ async function aplicarRolUsuario(user) {
       return;
     }
     const datos = snap.data();
+
+    // ── CAMBIO OBLIGATORIO DE CONTRASEÑA ──
+    if (datos.debeCambiarContrasena && datos.rol === "encargado") {
+      document.getElementById("modal-cambiar-pass").classList.add("abierto");
+      document.getElementById("btn-confirmar-nueva-pass").onclick = async () => {
+        const nueva    = document.getElementById("nueva-pass-input").value;
+        const confirma = document.getElementById("nueva-pass-confirm").value;
+        const errEl    = document.getElementById("nueva-pass-error");
+        errEl.style.display = "none";
+
+        if (nueva.length < 8) {
+          errEl.textContent = "La contraseña debe tener al menos 8 caracteres.";
+          errEl.style.display = "block"; return;
+        }
+        if (nueva !== confirma) {
+          errEl.textContent = "Las contraseñas no coinciden.";
+          errEl.style.display = "block"; return;
+        }
+
+        try {
+          await updatePassword(user, nueva);
+          await updateDoc(doc(db, "usuarios", user.uid), { debeCambiarContrasena: false });
+          document.getElementById("modal-cambiar-pass").classList.remove("abierto");
+          mostrarToast("✅ Contraseña guardada correctamente");
+        } catch(err) {
+          errEl.textContent = "Error al cambiar la contraseña. Intenta de nuevo.";
+          errEl.style.display = "block";
+        }
+      };
+    }
+
     rolActual = datos.rol || "administrador";
     seccionesPermitidas = rolActual === "encargado" ? (datos.secciones || []) : null;
     mostrarSoloSecciones(seccionesPermitidas);
@@ -1988,13 +2050,27 @@ function actualizarContadores() {
 }
 
 function cargarSelectores() {
-  const profesores = [...new Set(todasSolicitudes.map(s => s.profesor).filter(Boolean))];
+  // Profesores: leer directo de Firestore filtrando eliminados
   const sel = document.getElementById("filtro-profesor");
   sel.innerHTML = '<option value="">Todos los profesores</option>';
-  profesores.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p; opt.textContent = p;
-    sel.appendChild(opt);
+  getDocs(collection(db, "profesores")).then(snap => {
+    snap.docs
+      .map(d => d.data())
+      .filter(p => !p.eliminado)
+      .sort((a,b) => a.nombre.localeCompare(b.nombre))
+      .forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.nombre; opt.textContent = p.nombre;
+        sel.appendChild(opt);
+      });
+  }).catch(() => {
+    // Fallback: sacar de solicitudes si Firestore falla
+    const profesores = [...new Set(todasSolicitudes.map(s => s.profesor).filter(Boolean))];
+    profesores.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p; opt.textContent = p;
+      sel.appendChild(opt);
+    });
   });
 }
 
@@ -2696,35 +2772,27 @@ const LABORATORIOS_PP = [
 function ppPoblarSelects() {
   const selProf = document.getElementById("pp-select-profesor");
   const selLab  = document.getElementById("pp-select-laboratorio");
-  // Limpiar y rellenar profesores
+
+  // Profesores desde Firestore filtrando eliminados
   selProf.innerHTML = '<option value="">Selecciona un profesor</option>';
-  PROFESORES_PP.forEach(p => {
-    const o = document.createElement("option"); o.value = o.textContent = p; selProf.appendChild(o);
-  });
-  // Limpiar y rellenar laboratorios
-  selLab.innerHTML = '<option value="">Selecciona un laboratorio</option>';
-  LABORATORIOS_PP.forEach(l => {
-    const o = document.createElement("option"); o.value = o.textContent = l; selLab.appendChild(o);
-  });
-  // Intentar cargar desde Firestore si hay datos
   getDocs(collection(db, "profesores")).then(snap => {
-    if (!snap.empty) {
-      selProf.innerHTML = '<option value="">Selecciona un profesor</option>';
-      snap.docs.forEach(d => {
-        const o = document.createElement("option");
-        o.value = o.textContent = d.data().nombre; selProf.appendChild(o);
-      });
-    }
-  }).catch(() => {});
+    const activos = snap.docs.map(d => d.data()).filter(p => !p.eliminado).sort((a,b) => a.nombre.localeCompare(b.nombre));
+    const lista = activos.length > 0 ? activos.map(p => p.nombre) : PROFESORES_PP;
+    selProf.innerHTML = '<option value="">Selecciona un profesor</option>';
+    lista.forEach(p => { const o = document.createElement("option"); o.value = o.textContent = p; selProf.appendChild(o); });
+  }).catch(() => {
+    PROFESORES_PP.forEach(p => { const o = document.createElement("option"); o.value = o.textContent = p; selProf.appendChild(o); });
+  });
+
+  // Laboratorios desde Firestore
+  selLab.innerHTML = '<option value="">Selecciona un laboratorio</option>';
   getDocs(collection(db, "laboratorios")).then(snap => {
-    if (!snap.empty) {
-      selLab.innerHTML = '<option value="">Selecciona un laboratorio</option>';
-      snap.docs.forEach(d => {
-        const o = document.createElement("option");
-        o.value = o.textContent = d.data().nombre; selLab.appendChild(o);
-      });
-    }
-  }).catch(() => {});
+    const lista = !snap.empty ? snap.docs.map(d => d.data().nombre) : LABORATORIOS_PP;
+    selLab.innerHTML = '<option value="">Selecciona un laboratorio</option>';
+    lista.forEach(l => { const o = document.createElement("option"); o.value = o.textContent = l; selLab.appendChild(o); });
+  }).catch(() => {
+    LABORATORIOS_PP.forEach(l => { const o = document.createElement("option"); o.value = o.textContent = l; selLab.appendChild(o); });
+  });
 }
 
 window.abrirModalNuevoPrestamoProf = function() {
@@ -3513,7 +3581,8 @@ window.cerrarModalUsuario = function() {
 
 window.guardarUsuario = async function() {
   const nombre = document.getElementById("usr-input-nombre").value.trim();
-  const email  = document.getElementById("usr-input-email").value.trim();
+  const usuario = document.getElementById("usr-input-email").value.trim().toLowerCase().replace(/\s+/g,"");
+  const email  = usuario.includes("@") ? usuario : `${usuario}@taller.com`;
   const rol    = document.getElementById("usr-input-rol").value;
   const secciones = rol === "encargado"
     ? [...document.querySelectorAll(".usr-seccion-chk:checked")].map(c => c.value)
@@ -3535,13 +3604,18 @@ window.guardarUsuario = async function() {
     } else {
       // Crear cuenta nueva en Auth con una contraseña temporal aleatoria que NADIE conoce.
       // El usuario recibe un correo para definir la suya antes de poder entrar.
-      const passTemporal = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now();
+      const passTemporal = document.getElementById("usr-input-pass-temp")?.value.trim();
+      if (!passTemporal || passTemporal.length < 6) {
+        mostrarToast("La contraseña temporal debe tener al menos 6 caracteres", "rojo");
+        btn.disabled = false; btn.textContent = "✅ Guardar";
+        return;
+      }
       const cred = await createUserWithEmailAndPassword(authSecundaria, email, passTemporal);
       const uid = cred.user.uid;
-      await sendPasswordResetEmail(authSecundaria, email);
       await signOut(authSecundaria); // cerrar la sesión de la app secundaria
       await setDoc(doc(db, "usuarios", uid), {
         uid, nombre, email, rol, secciones,
+        debeCambiarContrasena: rol === "encargado",
         creadoEn: serverTimestamp()
       });
       mostrarToast("✅ Usuario creado. Le llegará un correo para definir su contraseña.");
