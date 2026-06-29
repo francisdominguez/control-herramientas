@@ -3313,7 +3313,7 @@ function renderHerramientasCfg(lista) {
     + filtrada.map((h, i) => {
         const local = h.local ? '<span style="font-size:10px;color:var(--texto-dim);margin-left:4px">(respaldo)</span>' : '';
         const codigo = h.codigo || '';
-        const fotoSrc = codigo ? 'img/herramientas/' + codigo + '.jpg' : '';
+        const fotoSrc = codigo ? '../img/herramientas/' + codigo + '.jpg' : '';
         const icono = h.icono || '🔧';
         const foto = fotoSrc
           ? '<img src="' + fotoSrc + '" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--borde)" onerror="herFotoError(this)">'
@@ -3363,7 +3363,7 @@ window.previsualizarFotoHer = function() {
   const preview = document.getElementById("her-foto-preview");
   if (!preview) return;
   if (codigo) {
-    preview.innerHTML = '<img src="img/herramientas/' + codigo + '.jpg" style="width:100%;height:100%;object-fit:cover" onerror="herFotoError(this)">';
+    preview.innerHTML = '<img src="../img/herramientas/' + codigo + '.jpg" style="width:100%;height:100%;object-fit:cover" onerror="herFotoError(this)">';
   } else {
     preview.textContent = '🔧';
   }
