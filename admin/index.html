@@ -821,11 +821,12 @@
   .fila-adicional input:focus { outline: none; border-color: var(--verde); }
   .fila-adicional .cant-adicional { width: 60px; }
   .btn-quitar-fila { background: none; border: none; color: var(--rojo); font-size: 16px; cursor: pointer; padding: 0 4px; }
+  .badge-gastable { font-size:10px;color:var(--amarillo);font-weight:700;background:rgba(210,153,34,0.15);padding:1px 6px;border-radius:10px;border:1px solid rgba(210,153,34,0.3); }
 </style>
 </head>
 <body>
 
-<div id="pantalla-login" style="display:none">
+<div id="pantalla-login">
   <div class="login-box">
     <div class="login-logo">🔧</div>
     <h1>Control de Herramientas</h1>
@@ -884,12 +885,12 @@
       <div class="nav-grupo">Inventario</div>
       <div class="nav-item" data-vista="inv-herramientas"><span class="nav-icono">🔧</span><span class="nav-texto">Herramientas</span></div>
       <div class="nav-item" data-vista="inv-materiales"><span class="nav-icono">🧰</span><span class="nav-texto">Materiales Gastables</span></div>
-      <div class="nav-item" data-vista="laboratorios"><span class="nav-icono">🏭</span><span class="nav-texto">Laboratorios / Talleres</span></div>
 
       <div class="nav-grupo">Reportes</div>
       <div class="nav-item" data-vista="historial"><span class="nav-icono">📊</span><span class="nav-texto">Historial</span></div>
 
       <div class="nav-grupo">Configuración</div>
+      <div class="nav-item" data-vista="materiales-cfg"><span class="nav-icono">🧰</span><span class="nav-texto">Materiales Gastables</span></div>
       <div class="nav-item" data-vista="profesores-cfg"><span class="nav-icono">👤</span><span class="nav-texto">Profesores</span></div>
       <div class="nav-item" data-vista="herramientas-cfg"><span class="nav-icono">🔧</span><span class="nav-texto">Herramientas</span></div>
       <div class="nav-item" data-vista="usuarios-cfg" id="nav-usuarios"><span class="nav-icono">🔐</span><span class="nav-texto">Usuarios</span></div>
@@ -1117,8 +1118,24 @@
       </div>
 
       <div class="vista" id="vista-inv-materiales">
-        <div class="pagina-titulo"><h2>Materiales Gastables</h2><p>Próximamente</p></div>
-        <div class="vacio"><div class="vacio-icono">🚧</div><p>Esta sección se construirá en la siguiente fase.</p></div>
+        <div class="pagina-titulo">
+          <div>
+            <h2>Materiales Gastables</h2>
+            <p>Ítems que se consumen en la práctica · aparecen en retorno con etiqueta especial</p>
+          </div>
+          <button class="btn btn-verde" onclick="abrirModalMaterial()" style="padding:9px 18px;font-size:13px">➕ Agregar material</button>
+        </div>
+        <div class="seccion-tabla">
+          <div class="tabla-header">
+            <h3>Lista de materiales gastables</h3>
+            <div class="filtros">
+              <input type="text" id="mat-buscar" placeholder="Buscar material...">
+            </div>
+          </div>
+          <div id="mat-cfg-wrap">
+            <div class="cargando"><div class="spinner"></div>Cargando materiales...</div>
+          </div>
+        </div>
       </div>
 
       <div class="vista" id="vista-laboratorios">
@@ -1182,6 +1199,28 @@
             <button class="modal-cerrar" onclick="document.getElementById('modal-hist').classList.remove('abierto')">✕</button>
           </div>
           <div id="modal-hist-contenido"></div>
+        </div>
+      </div>
+
+      <!-- ── MATERIALES CFG ── -->
+      <div class="vista" id="vista-materiales-cfg">
+        <div class="pagina-titulo">
+          <div>
+            <h2>Materiales Gastables</h2>
+            <p>Define qué ítems son gastables · aparecen con etiqueta especial en retornos</p>
+          </div>
+          <button class="btn btn-verde" onclick="abrirModalMaterial()" style="padding:9px 18px;font-size:13px">➕ Agregar material</button>
+        </div>
+        <div class="seccion-tabla">
+          <div class="tabla-header">
+            <h3>Lista de materiales gastables</h3>
+            <div class="filtros">
+              <input type="text" id="mat-buscar" placeholder="Buscar material...">
+            </div>
+          </div>
+          <div id="mat-cfg-wrap">
+            <div class="cargando"><div class="spinner"></div>Cargando materiales...</div>
+          </div>
         </div>
       </div>
 
@@ -1488,6 +1527,31 @@
 
 <div id="toast"></div>
 
+<!-- ── MODAL: AGREGAR / EDITAR MATERIAL GASTABLE ── -->
+<div class="modal-overlay" id="modal-material-cfg">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-titulo">
+      <span id="mat-modal-titulo">➕ Agregar material gastable</span>
+      <button class="modal-cerrar" onclick="cerrarModalMaterial()">✕</button>
+    </div>
+    <div class="modal-campo">
+      <label>Nombre del material</label>
+      <input type="text" id="mat-input-nombre" placeholder="Ej: Electrodo, Cinta adhesiva..."
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+    </div>
+    <div class="modal-campo">
+      <label>Stock disponible</label>
+      <input type="number" id="mat-input-stock" min="0" value="0"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+      <small style="color:var(--texto-dim);font-size:11px">Cantidad que tienes en el taller actualmente</small>
+    </div>
+    <div class="modal-acciones">
+      <button class="btn btn-outline" onclick="cerrarModalMaterial()">Cancelar</button>
+      <button class="btn btn-verde" id="mat-btn-guardar" onclick="guardarMaterial()">✅ Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-herramienta-cfg">
   <div class="modal" style="max-width:420px">
     <div class="modal-titulo">
@@ -1631,6 +1695,7 @@ onAuthStateChanged(auth, async user => {
     cargarPrestamosExternos();
     cargarHerramientasCfg();
     cargarProfesoresCfg();
+    cargarMaterialesCfg();
     cargarUsuariosCfg();
     await aplicarRolUsuario(user);
   } else {
@@ -2572,7 +2637,7 @@ window.retornar = function(id) {
   lista.innerHTML = herramientas.map((h, i) => `
     <div class="fila-herramienta">
       <input type="checkbox" id="chk-r-${i}" data-idx="${i}" checked>
-      <span class="h-nombre">${h.nombre}${h.adicional ? ' <span style="font-size:10px;color:var(--azul)">(adicional)</span>' : ""}</span>
+      <span class="h-nombre">${h.nombre}${h.adicional ? ' <span style="font-size:10px;color:var(--azul)">(adicional)</span>' : ""}${esMaterialGastable(h.nombre) ? ' <span class="badge-gastable">🧰 gastable</span>' : ""}</span>
       <span class="h-cant">x${h.cantidad}</span>
       <select class="select-estado" id="estado-r-${i}">
         <option value="retornada">✅ Retornada</option>
@@ -3672,6 +3737,115 @@ document.getElementById("modal-usuario-cfg")?.addEventListener("click", e => {
   if (e.target === document.getElementById("modal-usuario-cfg")) cerrarModalUsuario();
 });
 
+// ══════════════════════════════════════════════
+// ── MATERIALES GASTABLES ──
+// ══════════════════════════════════════════════
+
+let matCfgEditar = null;
+let _materialesGastables = []; // cache global para usar en retorno
+
+async function cargarMaterialesCfg() {
+  try {
+    onSnapshot(query(collection(db, "materiales_gastables"), orderBy("nombre", "asc")), snap => {
+      _materialesGastables = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderMaterialesCfg(_materialesGastables);
+      renderInvMateriales(_materialesGastables);
+    });
+  } catch(e) {
+    const w = document.getElementById("mat-cfg-wrap");
+    if (w) w.innerHTML = '<div class="cargando">Error al cargar materiales.</div>';
+  }
+}
+
+function renderMaterialesCfg(lista) {
+  const wrap = document.getElementById("mat-cfg-wrap");
+  if (!wrap) return;
+  const buscar = (document.getElementById("mat-buscar")?.value || "").toLowerCase();
+  const filtrada = buscar ? lista.filter(m => m.nombre.toLowerCase().includes(buscar)) : lista;
+  if (!filtrada.length) {
+    wrap.innerHTML = '<div class="vacio"><div class="vacio-icono">🧰</div><p>No hay materiales gastables registrados.</p></div>';
+    return;
+  }
+  wrap.innerHTML = '<table><thead><tr><th>#</th><th>Nombre</th><th>Stock</th><th>Acciones</th></tr></thead><tbody>'
+    + filtrada.map((m, i) => '<tr>'
+        + '<td style="color:var(--texto-dim)">' + (i+1) + '</td>'
+        + '<td><div style="display:flex;align-items:center;gap:8px"><span style="background:rgba(210,153,34,0.15);color:var(--amarillo);font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;border:1px solid rgba(210,153,34,0.3)">🧰 GASTABLE</span><span class="est-nombre">' + m.nombre + '</span></div></td>'
+        + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;color:var(--verde)">' + (m.stock ?? 0) + '</span></td>'
+        + '<td><div class="acciones-celda">'
+        + '<button class="btn btn-outline" onclick="abrirModalMaterial(\'' + m.id + '\',\'' + m.nombre.replace(/'/g,"\\'") + '\',' + (m.stock||0) + ')">✏️ Editar</button>'
+        + '<button class="btn btn-rojo" onclick="eliminarMaterial(\'' + m.id + '\',\'' + m.nombre.replace(/'/g,"\\'") + '\')">🗑 Eliminar</button>'
+        + '</div></td>'
+        + '</tr>').join("")
+    + '</tbody></table>';
+}
+
+function renderInvMateriales(lista) {
+  const wrap = document.getElementById("mat-cfg-wrap");
+  // Also render in inv-materiales if it exists with different id
+  const wrapInv = document.getElementById("mat-inv-wrap");
+  if (!wrapInv) return;
+  if (!lista.length) {
+    wrapInv.innerHTML = '<div class="vacio"><div class="vacio-icono">🧰</div><p>No hay materiales gastables registrados.</p></div>';
+    return;
+  }
+  wrapInv.innerHTML = '<table><thead><tr><th>#</th><th>Material</th><th>Stock disponible</th></tr></thead><tbody>'
+    + lista.map((m, i) => '<tr>'
+        + '<td style="color:var(--texto-dim)">' + (i+1) + '</td>'
+        + '<td><div style="display:flex;align-items:center;gap:8px"><span style="background:rgba(210,153,34,0.15);color:var(--amarillo);font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;border:1px solid rgba(210,153,34,0.3)">🧰 GASTABLE</span><span class="est-nombre">' + m.nombre + '</span></div></td>'
+        + '<td><span style="background:var(--card2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;color:var(--verde)">' + (m.stock ?? 0) + '</span></td>'
+        + '</tr>').join("")
+    + '</tbody></table>';
+}
+
+window.abrirModalMaterial = function(id = null, nombre = "", stock = 0) {
+  matCfgEditar = id;
+  document.getElementById("mat-modal-titulo").textContent = id ? "✏️ Editar material" : "➕ Agregar material gastable";
+  document.getElementById("mat-input-nombre").value = nombre;
+  document.getElementById("mat-input-stock").value = stock;
+  document.getElementById("modal-material-cfg").classList.add("abierto");
+};
+
+window.cerrarModalMaterial = function() {
+  document.getElementById("modal-material-cfg").classList.remove("abierto");
+  matCfgEditar = null;
+};
+
+window.guardarMaterial = async function() {
+  const nombre = document.getElementById("mat-input-nombre").value.trim();
+  const stock  = parseInt(document.getElementById("mat-input-stock").value) || 0;
+  if (!nombre) { mostrarToast("Escribe el nombre del material", "rojo"); return; }
+  const btn = document.getElementById("mat-btn-guardar");
+  btn.disabled = true; btn.textContent = "Guardando...";
+  try {
+    if (matCfgEditar) {
+      await updateDoc(doc(db, "materiales_gastables", matCfgEditar), { nombre, stock });
+      mostrarToast("✅ Material actualizado");
+    } else {
+      await addDoc(collection(db, "materiales_gastables"), { nombre, stock, creadoEn: serverTimestamp() });
+      mostrarToast("✅ Material agregado");
+    }
+    cerrarModalMaterial();
+  } catch(e) { mostrarToast("Error al guardar", "rojo"); }
+  finally { btn.disabled = false; btn.textContent = "✅ Guardar"; }
+};
+
+window.eliminarMaterial = async function(id, nombre) {
+  if (!confirm('¿Eliminar "' + nombre + '" de los materiales gastables?')) return;
+  try {
+    await deleteDoc(doc(db, "materiales_gastables", id));
+    mostrarToast("Material eliminado");
+  } catch(e) { mostrarToast("Error al eliminar", "rojo"); }
+};
+
+window.esMaterialGastable = function(nombreHerramienta) {
+  return _materialesGastables.some(m => m.nombre.toLowerCase() === nombreHerramienta.toLowerCase());
+};
+
+document.getElementById("mat-buscar")?.addEventListener("input", () => renderMaterialesCfg(_materialesGastables));
+document.getElementById("modal-material-cfg")?.addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-material-cfg")) cerrarModalMaterial();
+});
+
 // ── TEMA ──
 function aplicarTema(tema) {
   if (tema === 'claro') {
@@ -3869,9 +4043,12 @@ document.getElementById("hist-btn-limpiar")?.addEventListener("click", () => {
   histRenderTabla();
 });
 
-// Cargar cuando navegas a historial
+// Cargar cuando navegas a historial o materiales
 document.querySelectorAll(".nav-item[data-vista='historial']").forEach(el => {
   el.addEventListener("click", () => setTimeout(cargarHistorial, 50));
+});
+document.querySelectorAll(".nav-item[data-vista='materiales-cfg'], .nav-item[data-vista='inv-materiales']").forEach(el => {
+  el.addEventListener("click", () => setTimeout(cargarMaterialesCfg, 50));
 });
 
 // Modal detalle historial
