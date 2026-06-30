@@ -2250,7 +2250,7 @@ function renderTabla() {
             <td style="font-size:12px;color:var(--texto-dim);max-width:220px">
               ${(s.herramientas||[]).map(h => h.nombre + ' ×' + h.cantidad + (h.adicional ? '<span style="color:var(--azul);font-size:10px;margin-left:3px">(adic)</span>' : '')).join(', ') || '—'}
             </td>
-            <td><span class="badge badge-${s.estado}">${s.estado}</span>${s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : ''}</td>
+            <td style="white-space:nowrap"><span class="badge badge-${s.estado}">${s.estado}</span>${s.tieneIncidencias ? ' <span class="badge badge-cancelada" title="Tiene incidencias">⚠️</span>' : ''}</td>
             <td>
               <div style="display:flex;gap:6px">
                 <button class="btn btn-outline" onclick="event.stopPropagation();abrirModal('${s.id}')">👁 Ver</button>
@@ -2860,7 +2860,7 @@ function ppRenderTabla() {
               <td style="font-size:13px">${p.laboratorio || "—"}</td>
               <td style="font-size:12px;color:var(--texto-dim);max-width:200px">${herramientasTexto}</td>
               <td style="font-size:12px;color:var(--texto-dim)">${fecha}</td>
-              <td>${badgeEstado}</td>
+              <td style="white-space:nowrap">${badgeEstado}</td>
               <td>${acciones}</td>
             </tr>`;
         }).join("")}
