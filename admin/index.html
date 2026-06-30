@@ -1848,7 +1848,7 @@ window.verIncidencias = function() {
   if (panel) {
     panel.style.display = "block";
     const wrap = document.getElementById("tabla-incidencias-prof-wrap");
-    const lista = (todosPrestamosProf || []).filter(p => p.tieneIncidencias);
+    const lista = (todosPrestamosProfTodos || []).filter(p => p.tieneIncidencias);
     if (!lista.length) {
       wrap.innerHTML = '<div class="vacio" style="padding:20px;text-align:center;color:var(--texto-dim)">📭 No hay préstamos a profesores con incidencias.</div>';
     } else {
@@ -2448,7 +2448,7 @@ function cerrarModal() {
 }
 
 window.verDetalleIncidenciaProf = async function(prestamoId) {
-  const p = todosPrestamosProf.find(x => x.id === prestamoId);
+  const p = (todosPrestamosProfTodos || todosPrestamosProf).find(x => x.id === prestamoId);
   if (!p) return;
   document.getElementById("modal-titulo-texto").textContent = "Detalle de Incidencia";
   document.getElementById("modal-contenido").innerHTML = `<div class="cargando"><div class="spinner"></div>Cargando detalle...</div>`;
@@ -2788,17 +2788,19 @@ let ppActivoId = null;
 let todosPrestamosExt = [];
 let extActivoId = null;
 
+let todosPrestamosProfTodos = []; // incluye incidencias de cualquier fecha (para el panel de Incidencias)
+
 async function cargarPrestamosProf() {
   try {
     onSnapshot(query(collection(db, "prestamos_profesores"), orderBy("creadoEn", "desc")), snap => {
       const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-      todosPrestamosProf = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => {
-          if (!p.creadoEn) return false;
-          const fecha = p.creadoEn.toDate ? p.creadoEn.toDate() : new Date(p.creadoEn);
-          return fecha >= hoy;
-        });
+      const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      todosPrestamosProfTodos = todos;
+      todosPrestamosProf = todos.filter(p => {
+        if (!p.creadoEn) return false;
+        const fecha = p.creadoEn.toDate ? p.creadoEn.toDate() : new Date(p.creadoEn);
+        return fecha >= hoy;
+      });
       ppRenderTabla();
     });
   } catch(e) {
