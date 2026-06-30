@@ -30,6 +30,7 @@ const HERRAMIENTAS_RESPALDO = [
   { codigo: "HER-009", nombre: "Cuchilla",          icono: "🔪", cantidadDisponible: 5 },
   { codigo: "HER-010", nombre: "Destornillador plano", icono: "🪛", cantidadDisponible: 8 },
   { codigo: "HER-011", nombre: "Destornillador estrella", icono: "🪛", cantidadDisponible: 8 },
+  { codigo: "HER-012", nombre: "Electrodo",         icono: "⚡", cantidadDisponible: 20 },
   { codigo: "HER-013", nombre: "Escuadra falsa",    icono: "📐", cantidadDisponible: 5 },
   { codigo: "HER-014", nombre: "Gira tuerca",       icono: "🔧", cantidadDisponible: 5 },
   { codigo: "HER-015", nombre: "Granetero",         icono: "🔨", cantidadDisponible: 5 },
