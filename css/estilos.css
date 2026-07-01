@@ -166,6 +166,16 @@ body {
   padding: 16px;
 }
 
+/* En PC/tablet el formulario se ensancha para que quepan más columnas
+   de herramientas sin apretarlas. En celular queda como estaba (480px). */
+@media (min-width: 700px) {
+  #pantalla-formulario .contenedor { max-width: 760px; }
+}
+
+@media (min-width: 1000px) {
+  #pantalla-formulario .contenedor { max-width: 980px; }
+}
+
 .form-encabezado {
   text-align: center;
   padding: 20px 16px 8px;
@@ -306,12 +316,21 @@ body {
   cursor: pointer;
 }
 
-/* Grid herramientas */
+/* Grid herramientas
+   Mobile-first: 2 columnas por defecto (celular), 3 en tablet, 5 en PC. */
 .grid-herramientas {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   margin-top: 4px;
+}
+
+@media (min-width: 480px) {
+  .grid-herramientas { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 900px) {
+  .grid-herramientas { grid-template-columns: repeat(5, 1fr); }
 }
 
 .tarjeta-herramienta {
