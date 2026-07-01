@@ -111,10 +111,9 @@ export async function cargarHerramientas() {
     // Un documento incompleto ya no tumba el catálogo completo: se omite y se
     // avisa en consola, en vez de disparar el catch y perder TODAS las
     // herramientas de Firestore por culpa de un solo registro mal cargado.
-    const enFirestore = snap.docs
+    const todosValidos = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .filter(h => {
-        if (h.eliminada) return false;
         if (typeof h.nombre !== "string" || !h.nombre.trim()) {
           console.warn(`Herramienta con id "${h.id}" no tiene "nombre" válido, se omite del catálogo. Revísala en el panel admin.`, h);
           return false;
@@ -122,7 +121,11 @@ export async function cargarHerramientas() {
         return true;
       });
 
-    const nombresFirestore = new Set(enFirestore.map(h => h.nombre.toLowerCase()));
+    // nombresFirestore se arma con TODOS los documentos válidos, incluidos los
+    // marcados eliminada:true — así un nombre "eliminado" (ej. al renombrar una
+    // herramienta de respaldo) no vuelve a colarse desde HERRAMIENTAS_RESPALDO.
+    const nombresFirestore = new Set(todosValidos.map(h => h.nombre.toLowerCase()));
+    const enFirestore = todosValidos.filter(h => !h.eliminada);
 
     // Herramientas del respaldo que NO están en Firestore
     const delRespaldo = HERRAMIENTAS_RESPALDO.filter(
