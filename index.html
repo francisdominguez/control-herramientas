@@ -5,6 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solicitud de Herramientas</title>
 <link rel="stylesheet" href="css/estilos.css">
+<style>
+  /* Lightbox para ampliar la foto de una herramienta al tocarla */
+  #grid-herramientas img { cursor: zoom-in; }
+  #lightbox-herramienta {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 24px; cursor: zoom-out;
+  }
+  #lightbox-herramienta.oculto { display: none; }
+  #lightbox-herramienta img {
+    max-width: 90vw; max-height: 90vh;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  #lightbox-cerrar {
+    position: absolute; top: 16px; right: 20px;
+    background: rgba(255,255,255,0.15);
+    border: none; color: #fff;
+    font-size: 22px; width: 40px; height: 40px;
+    border-radius: 50%; cursor: pointer;
+  }
+</style>
 </head>
 <body>
 
@@ -169,6 +192,28 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== LIGHTBOX: ampliar foto de herramienta al tocarla ===== -->
+  <div id="lightbox-herramienta" class="oculto">
+    <button id="lightbox-cerrar" type="button" aria-label="Cerrar">✕</button>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+  <script>
+    // Delegación de eventos: funciona con las imágenes que app.js va
+    // agregando dinámicamente dentro de #grid-herramientas, sin importar
+    // cómo las genere.
+    document.getElementById('grid-herramientas')?.addEventListener('click', e => {
+      const img = e.target.closest('img');
+      if (!img) return;
+      const lb = document.getElementById('lightbox-herramienta');
+      document.getElementById('lightbox-img').src = img.src;
+      document.getElementById('lightbox-img').alt = img.alt || '';
+      lb.classList.remove('oculto');
+    });
+    document.getElementById('lightbox-herramienta')?.addEventListener('click', function() {
+      this.classList.add('oculto');
+    });
+  </script>
 
   <!-- Firebase SDK -->
   <script type="module" src="js/firebase.js"></script>
