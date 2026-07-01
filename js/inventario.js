@@ -58,7 +58,7 @@ const HERRAMIENTAS_RESPALDO = [
   { codigo: "HER-037", nombre: "Porta broca",       icono: "🔧", cantidadDisponible: 5 },
   { codigo: "HER-038", nombre: "Segueta",           icono: "🪚", cantidadDisponible: 5 },
   { codigo: "HER-039", nombre: "Tarraja de 1/2x13", icono: "🔧", cantidadDisponible: 5 }
-].map(h => ({ ...h, imagen: `img/herramientas/${h.codigo}.jpg` }));
+].map(h => ({ ...h, imagen: `img/herramientas/${h.codigo}.png` }));
 
 async function obtenerColeccionOTexto(nombreColeccion, listaRespaldo, campo = "nombre") {
   try {
@@ -110,13 +110,11 @@ export async function cargarHerramientas() {
     );
 
     // Combinar — las de Firestore usan su cantidad actualizada
-    // y construimos la imagen priorizando la foto subida desde el panel
-    // admin (fotoUrl), y solo si no hay foto personalizada caemos a la
-    // ruta estática por código (img/herramientas/CODIGO.jpg).
+    // y construimos la imagen con el código disponible
     const firestoreConImagen = enFirestore.map(h => ({
       ...h,
-      imagen: h.fotoUrl || (h.codigo ? `img/herramientas/${h.codigo}.jpg` : (h.imagen || '')),
-      icono:  h.icono  || '🔧'
+      imagen: h.imagenURL || h.imagen || (h.codigo ? `img/herramientas/${h.codigo}.png` : ''),
+      icono:  h.icono || '🔧'
     }));
 
     return [...firestoreConImagen, ...delRespaldo]
