@@ -97,10 +97,20 @@ export async function cargarHerramientas() {
   try {
     const snap = await getDocs(collection(db, "herramientas"));
 
-    // Herramientas en Firestore (excluir eliminadas)
+    // Herramientas en Firestore (excluir eliminadas y documentos sin "nombre" válido).
+    // Un documento incompleto ya no tumba el catálogo completo: se omite y se
+    // avisa en consola, en vez de disparar el catch y perder TODAS las
+    // herramientas de Firestore por culpa de un solo registro mal cargado.
     const enFirestore = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
-      .filter(h => !h.eliminada);
+      .filter(h => {
+        if (h.eliminada) return false;
+        if (typeof h.nombre !== "string" || !h.nombre.trim()) {
+          console.warn(`Herramienta con id "${h.id}" no tiene "nombre" válido, se omite del catálogo. Revísala en el panel admin.`, h);
+          return false;
+        }
+        return true;
+      });
 
     const nombresFirestore = new Set(enFirestore.map(h => h.nombre.toLowerCase()));
 
