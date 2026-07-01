@@ -191,6 +191,10 @@ gridHerramientas.addEventListener("click", (e) => {
   cantidadesSeleccionadas[codigo] = cantidad;
   document.getElementById(`cant-${codigo}`).textContent = cantidad;
 
+  // Marcar/desmarcar tarjeta visualmente
+  const card = gridHerramientas.querySelector(`button[data-codigo="${codigo}"]`)?.closest(".tarjeta-herramienta");
+  if (card) card.classList.toggle("seleccionada", cantidad > 0);
+
   const btnSumar = gridHerramientas.querySelector(`button[data-codigo="${codigo}"][data-accion="sumar"]`);
   if (btnSumar) btnSumar.disabled = cantidad >= maxDisponible;
 });
@@ -408,6 +412,8 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
     if (accion === "restar" && cant > 0) cant -= 1;
     cantidadesModalExtra[codigo] = cant;
     document.getElementById(`mcant-${codigo}`).textContent = cant;
+    const cardModal = e.target.closest(".tarjeta-herramienta");
+    if (cardModal) cardModal.classList.toggle("seleccionada", cant > 0);
   });
 
   // ---- Botón Cancelar ----
