@@ -143,10 +143,17 @@ function llenarSelect(select, items, campo) {
   });
 }
 
+// Clave estable para identificar una herramienta, con o sin campo "codigo".
+// Las herramientas subidas desde el panel solo tienen id de Firestore.
+function claveHerramienta(h) {
+  return h.codigo || h.id;
+}
+
 function renderizarHerramientas(herramientas) {
   gridHerramientas.innerHTML = "";
   herramientas.forEach(h => {
-    cantidadesSeleccionadas[h.codigo] = 0;
+    const key = claveHerramienta(h);
+    cantidadesSeleccionadas[key] = 0;
     const maxDisponible = Number.isFinite(h.cantidadDisponible) ? h.cantidadDisponible : 5;
 
     const card = document.createElement("div");
@@ -159,9 +166,9 @@ function renderizarHerramientas(herramientas) {
       <div class="nombre">${h.nombre}</div>
       <div class="disponible">Disp. ${maxDisponible}</div>
       <div class="contador">
-        <button type="button" data-codigo="${h.codigo}" data-accion="restar">−</button>
-        <span class="cantidad" id="cant-${h.codigo}">0</span>
-        <button type="button" data-codigo="${h.codigo}" data-accion="sumar" ${maxDisponible === 0 ? "disabled" : ""}>+</button>
+        <button type="button" data-codigo="${key}" data-accion="restar">−</button>
+        <span class="cantidad" id="cant-${key}">0</span>
+        <button type="button" data-codigo="${key}" data-accion="sumar" ${maxDisponible === 0 ? "disabled" : ""}>+</button>
       </div>
     `;
     gridHerramientas.appendChild(card);
@@ -174,7 +181,7 @@ gridHerramientas.addEventListener("click", (e) => {
 
   const codigo = btn.dataset.codigo;
   const accion = btn.dataset.accion;
-  const info = herramientasDisponibles.find(h => h.codigo === codigo);
+  const info = herramientasDisponibles.find(h => claveHerramienta(h) === codigo);
   const maxDisponible = info && Number.isFinite(info.cantidadDisponible) ? info.cantidadDisponible : 5;
 
   let cantidad = cantidadesSeleccionadas[codigo] || 0;
@@ -323,7 +330,8 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
   // Grid de herramientas con las mismas clases del formulario
   let gridHtml = "";
   herramientasDisp.forEach(h => {
-    cantidadesModalExtra[h.codigo] = 0;
+    const key = claveHerramienta(h);
+    cantidadesModalExtra[key] = 0;
     const max = Number.isFinite(h.cantidadDisponible) ? h.cantidadDisponible : 5;
     gridHtml += `
       <div class="tarjeta-herramienta">
@@ -334,9 +342,9 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
         <div class="nombre">${h.nombre}</div>
         <div class="disponible">Disp. ${max}</div>
         <div class="contador">
-          <button type="button" data-mcodigo="${h.codigo}" data-maccion="restar">−</button>
-          <span class="cantidad" id="mcant-${h.codigo}">0</span>
-          <button type="button" data-mcodigo="${h.codigo}" data-maccion="sumar" ${max === 0 ? "disabled" : ""}>+</button>
+          <button type="button" data-mcodigo="${key}" data-maccion="restar">−</button>
+          <span class="cantidad" id="mcant-${key}">0</span>
+          <button type="button" data-mcodigo="${key}" data-maccion="sumar" ${max === 0 ? "disabled" : ""}>+</button>
         </div>
       </div>
     `;
@@ -402,7 +410,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
     if (!btn) return;
     const codigo = btn.dataset.mcodigo;
     const accion = btn.dataset.maccion;
-    const info = herramientasDisp.find(h => h.codigo === codigo);
+    const info = herramientasDisp.find(h => claveHerramienta(h) === codigo);
     const max = info && Number.isFinite(info.cantidadDisponible) ? info.cantidadDisponible : 5;
     let cant = cantidadesModalExtra[codigo] || 0;
     if (accion === "sumar") {
@@ -426,7 +434,7 @@ function abrirModalDuplicado(solicitud, herramientasDisp) {
     const nuevas = Object.entries(cantidadesModalExtra)
       .filter(([_, c]) => c > 0)
       .map(([codigo, cantidad]) => {
-        const info = herramientasDisp.find(h => h.codigo === codigo);
+        const info = herramientasDisp.find(h => claveHerramienta(h) === codigo);
         return { 
           codigo, 
           nombre: info ? info.nombre : codigo, 
@@ -526,7 +534,7 @@ btnEnviar.addEventListener("click", async (e) => {
   const herramientasElegidas = Object.entries(cantidadesSeleccionadas)
     .filter(([_, c]) => c > 0)
     .map(([codigo, cantidad]) => {
-      const info = herramientasDisponibles.find(h => h.codigo === codigo);
+      const info = herramientasDisponibles.find(h => claveHerramienta(h) === codigo);
       return { 
         codigo, 
         nombre: info ? info.nombre : codigo, 
