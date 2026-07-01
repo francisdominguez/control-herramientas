@@ -3418,9 +3418,13 @@ let _herListaActual = [];
 async function cargarHerramientasCfg() {
   try {
     onSnapshot(query(collection(db, "herramientas"), orderBy("nombre", "asc")), snap => {
-      const enFirestore = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const nombresFirestore = new Set(enFirestore.map(h => h.nombre.toLowerCase()));
-      const eliminadas = new Set(enFirestore.filter(h => h.eliminada).map(h => h.nombre.toLowerCase()));
+      const todosValidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const nombresFirestore = new Set(todosValidos.map(h => h.nombre.toLowerCase()));
+      const eliminadas = new Set(todosValidos.filter(h => h.eliminada).map(h => h.nombre.toLowerCase()));
+      // No mostrar en la tabla los documentos "tombstone" (eliminada:true) que
+      // se crean al renombrar/eliminar una herramienta de respaldo — solo
+      // sirven para que no reaparezcan desde HERRAMIENTAS_LISTA.
+      const enFirestore = todosValidos.filter(h => !h.eliminada);
       const delRespaldo = HERRAMIENTAS_LISTA
         .filter(h => !nombresFirestore.has(h.nombre.toLowerCase()) && !eliminadas.has(h.nombre.toLowerCase()))
         .map((h, i) => ({ id: "local-" + i, nombre: h.nombre, cantidadDisponible: h.cantidadDisponible || 5, icono: h.icono, codigo: h.codigo, local: true }));
