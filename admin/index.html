@@ -1607,6 +1607,13 @@
       <input type="number" id="her-input-cantidad" min="0" value="1"
         style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
     </div>
+    <div class="modal-campo">
+      <label>Práctica / combo (ej: Soldadura)</label>
+      <input type="text" id="her-input-practica" list="her-practica-lista" placeholder="Dejar vacío = sin agrupar"
+        style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--borde);border-radius:8px;color:var(--texto);font-size:14px">
+      <datalist id="her-practica-lista"></datalist>
+      <small style="color:var(--texto-dim);font-size:11px">Agrupa herramientas de distintas categorías que siempre se piden juntas para una práctica — el estudiante verá un botón "Agregar combo completo"</small>
+    </div>
     <div class="modal-acciones">
       <button class="btn btn-outline" onclick="cerrarModalHerramienta()">Cancelar</button>
       <button class="btn btn-verde" id="her-btn-guardar" onclick="guardarHerramienta()">✅ Guardar</button>
@@ -3505,6 +3512,11 @@ function renderHerramientasCfg(lista) {
 
   const conteoUsos = contarSolicitudesPorHerramienta();
 
+  // Sugerencias de práctica ya usadas, para no crear duplicados por escritura distinta.
+  const practicasUsadas = [...new Set(lista.map(h => h.practica).filter(Boolean))].sort();
+  const dlPractica = document.getElementById("her-practica-lista");
+  if (dlPractica) dlPractica.innerHTML = practicasUsadas.map(p => '<option value="' + p.replace(/"/g,"&quot;") + '">').join("");
+
   // ── Chips de categoría ──
   const chipsWrap = document.getElementById("her-chips");
   if (chipsWrap) {
@@ -3608,6 +3620,7 @@ function renderHerramientasCfg(lista) {
         </div>
         <div class="her-cuerpo">
           <div class="her-nombre">${h.nombre}${local}</div>
+          ${h.practica ? `<div style="font-size:10px;color:var(--verde);font-weight:700;margin-bottom:6px">🏷️ ${h.practica}</div>` : ''}
           <div class="her-fila-stock">
             <span class="her-stock-badge">${cantidad} disp.</span>
             <span class="her-usos">${usos > 0 ? usos + ' pedidas' : 'sin pedidos'}</span>
@@ -3649,6 +3662,7 @@ window.abrirModalHerramienta = function(id = null, nombre = "", cantidad = 1, es
   const categoriaFinal = datosActuales?.categoria || refLista?.categoria || categoria || "";
   document.getElementById("her-input-categoria").value = categoriaFinal;
   document.getElementById("her-input-cantidad").value = cantidad;
+  document.getElementById("her-input-practica").value = datosActuales?.practica || "";
   document.getElementById("her-input-foto").value = "";
   document.getElementById("her-progreso-wrap").style.display = "none";
   document.getElementById("her-foto-exito").style.display = "none";
@@ -3749,11 +3763,12 @@ window.guardarHerramienta = async function() {
   const nombre    = document.getElementById("her-input-nombre").value.trim();
   const categoria = document.getElementById("her-input-categoria").value;
   const cantidad  = parseInt(document.getElementById("her-input-cantidad").value) || 0;
+  const practica  = document.getElementById("her-input-practica").value.trim();
   if (!nombre) { mostrarToast("Escribe el nombre de la herramienta", "rojo"); return; }
   const btn = document.getElementById("her-btn-guardar");
   btn.disabled = true; btn.textContent = "Guardando...";
   const nombreFinal = nombre;
-  const datos = { nombre: nombreFinal, cantidadDisponible: cantidad, categoria };
+  const datos = { nombre: nombreFinal, cantidadDisponible: cantidad, categoria, practica };
   // No perder codigo/icono del respaldo al editar solo cantidad/nombre.
   if (herCfgCodigoLocal) datos.codigo = herCfgCodigoLocal;
   if (herCfgIconoLocal)  datos.icono  = herCfgIconoLocal;
