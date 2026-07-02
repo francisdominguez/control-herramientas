@@ -3702,7 +3702,7 @@ window.eliminarHerramienta = async function(id, nombre, esLocal = false) {
   } catch(e) { mostrarToast("Error al eliminar", "rojo"); }
 };
 
-document.getElementById("her-buscar")?.addEventListener("input", () => {});
+document.getElementById("her-buscar")?.addEventListener("input", () => renderHerramientasCfg(_herListaActual));
 
 document.getElementById("modal-herramienta-cfg")?.addEventListener("click", e => {
   if (e.target === document.getElementById("modal-herramienta-cfg")) cerrarModalHerramienta();
